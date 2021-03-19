@@ -6,7 +6,7 @@ if [ $# -eq 1 ]; then
   BRANCH=$1
 fi
 
-site_list=$(ls -d */ | sed 's/\///g' | grep -v output)
+site_list=$(ls -d */ | sed 's/\///g' | grep -v 'docs')
 echo "Fetch base with $BRANCH branch/tag........"
 git clone -b $BRANCH $DECAPOD_BASE_URL
 if [ $? -ne 0 ]; then
