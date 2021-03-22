@@ -6,6 +6,21 @@ This repository contains custom configurations for [decapod-base-yaml](https://g
 * [Make your own site-yaml](https://github.com/openinfradev/decapod-base-yaml/blob/main/docs/quickstart.md#make-your-own-site-yaml)
 * [CI pipeline](docs/ci.md)
 
+
+## Make your own site
+```console
+$ ./create_site.sh site_name
+Cloning into '.base-yaml'...
+remote: Enumerating objects: 146, done.
+remote: Counting objects: 100% (146/146), done.
+remote: Compressing objects: 100% (106/106), done.
+remote: Total 533 (delta 54), reused 101 (delta 29), pack-reused 387
+Receiving objects: 100% (533/533), 187.43 KiB | 2.53 MiB/s, done.
+Resolving deltas: 100% (186/186), done.
+$ ls site_name
+admin-tools   cloud-console lma           openstack     service-mesh
+```
+
 ## Example
 
 base(1) + site(2) => [variant](https://kubectl.docs.kubernetes.io/references/kustomize/glossary/#variant)(3)
