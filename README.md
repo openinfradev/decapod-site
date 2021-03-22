@@ -2,7 +2,7 @@
 This repository contains custom configurations for [decapod-base-yaml](https://github.com/openinfradev/decapod-base-yaml) and [decapod-flow](https://github.com/openinfradev/decapod-flow).  
 
 ## Documents
-* [Render decapod-site-yaml](https://github.com/openinfradev/decapod-base-yaml/blob/main/docs/quickstart.md#render-decapod-site-yaml)
+* [Render decapod-site](https://github.com/openinfradev/decapod-base-yaml/blob/main/docs/quickstart.md#render-decapod-site)
 * [Make your own site-yaml](https://github.com/openinfradev/decapod-base-yaml/blob/main/docs/quickstart.md#make-your-own-site-yaml)
 * [CI pipeline](docs/ci.md)
 
