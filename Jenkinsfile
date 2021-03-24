@@ -15,7 +15,7 @@ pipeline {
     )
     string(name: 'SITE_BRANCH',
       defaultValue: 'main',
-      description: 'Branch name for decapod-site-yaml'
+      description: 'Branch name for decapod-site'
     )
     string(name: 'K8S_VM_NAME',
       defaultValue: '',
@@ -33,6 +33,7 @@ pipeline {
         script {
           sh """
             git clone https://github.com/openinfradev/taco-gate-inventories.git
+            git clone https://github.com/openinfradev/decapod-flow.git
             cp taco-gate-inventories/config/pangyo-clouds.yml ./clouds.yaml
           """
 
@@ -73,8 +74,8 @@ pipeline {
           }
           BRANCH_NAME = "jenkins-deploy-${env.BUILD_NUMBER}"
           sh """
-            git clone -b $SITE_BRANCH https://github.com/openinfradev/decapod-site-yaml.git
-            cd decapod-site-yaml && git checkout -b $BRANCH_NAME
+            git clone -b $SITE_BRANCH https://github.com/openinfradev/decapod-site.git
+            cd decapod-site && git checkout -b $BRANCH_NAME
 
             git push origin $BRANCH_NAME
             cd ..
@@ -88,7 +89,7 @@ pipeline {
 
           sh """
             cp /opt/jenkins/.ssh/jenkins-slave-hanukey ./jenkins.key
-            scp -o StrictHostKeyChecking=no -i jenkins.key -r taco-gate-inventories/workflows/* taco-gate-inventories/scripts/deployApps.sh taco@$ADMIN_NODE_IP:/home/taco/
+            scp -o StrictHostKeyChecking=no -i jenkins.key -r decapod-flow/workflows/* taco-gate-inventories/scripts/deployApps.sh taco@$ADMIN_NODE_IP:/home/taco/
             ssh -o StrictHostKeyChecking=no -i jenkins.key taco@$ADMIN_NODE_IP chmod 0755 /home/taco/deployApps.sh
             ssh -o StrictHostKeyChecking=no -i jenkins.key taco@$ADMIN_NODE_IP /home/taco/deployApps.sh --apps ${params.APPS} --site hanu-deploy-apps --branch $BRANCH_NAME
           """
@@ -119,7 +120,7 @@ pipeline {
       script {
         sh """
           echo "Delete temporary branch"
-          cd decapod-site-yaml && git push origin :$BRANCH_NAME
+          cd decapod-site && git push origin :$BRANCH_NAME
         """
       }
     }
