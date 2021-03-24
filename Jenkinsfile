@@ -33,6 +33,7 @@ pipeline {
         script {
           sh """
             git clone https://github.com/openinfradev/taco-gate-inventories.git
+            git clone https://github.com/openinfradev/decapod-flow.git
             cp taco-gate-inventories/config/pangyo-clouds.yml ./clouds.yaml
           """
 
@@ -88,7 +89,7 @@ pipeline {
 
           sh """
             cp /opt/jenkins/.ssh/jenkins-slave-hanukey ./jenkins.key
-            scp -o StrictHostKeyChecking=no -i jenkins.key -r taco-gate-inventories/workflows/* taco-gate-inventories/scripts/deployApps.sh taco@$ADMIN_NODE_IP:/home/taco/
+            scp -o StrictHostKeyChecking=no -i jenkins.key -r decapod-flow/workflows/* taco-gate-inventories/scripts/deployApps.sh taco@$ADMIN_NODE_IP:/home/taco/
             ssh -o StrictHostKeyChecking=no -i jenkins.key taco@$ADMIN_NODE_IP chmod 0755 /home/taco/deployApps.sh
             ssh -o StrictHostKeyChecking=no -i jenkins.key taco@$ADMIN_NODE_IP /home/taco/deployApps.sh --apps ${params.APPS} --site hanu-deploy-apps --branch $BRANCH_NAME
           """
