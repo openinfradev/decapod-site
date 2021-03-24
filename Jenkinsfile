@@ -15,7 +15,7 @@ pipeline {
     )
     string(name: 'SITE_BRANCH',
       defaultValue: 'main',
-      description: 'Branch name for decapod-site-yaml'
+      description: 'Branch name for decapod-site'
     )
     string(name: 'K8S_VM_NAME',
       defaultValue: '',
@@ -73,8 +73,8 @@ pipeline {
           }
           BRANCH_NAME = "jenkins-deploy-${env.BUILD_NUMBER}"
           sh """
-            git clone -b $SITE_BRANCH https://github.com/openinfradev/decapod-site-yaml.git
-            cd decapod-site-yaml && git checkout -b $BRANCH_NAME
+            git clone -b $SITE_BRANCH https://github.com/openinfradev/decapod-site.git
+            cd decapod-site && git checkout -b $BRANCH_NAME
 
             git push origin $BRANCH_NAME
             cd ..
@@ -119,7 +119,7 @@ pipeline {
       script {
         sh """
           echo "Delete temporary branch"
-          cd decapod-site-yaml && git push origin :$BRANCH_NAME
+          cd decapod-site && git push origin :$BRANCH_NAME
         """
       }
     }
