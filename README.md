@@ -28,7 +28,7 @@ base(1) + site(2) => [variant](https://kubectl.docs.kubernetes.io/references/kus
          nodeSelector: {} # TO_BE_FIXED
    ```
 
-2. _decapod-site-yaml/{your site name}/lma/site-values.yaml_:
+2. _decapod-site/{your site name}/lma/site-values.yaml_:
    ```yaml
    apiVersion: openinfradev.github.com/v1
    kind: HelmValuesTransformer
@@ -45,7 +45,7 @@ base(1) + site(2) => [variant](https://kubectl.docs.kubernetes.io/references/kus
       elasticsearchOperator.nodeSelector: $(nodeSelector)
    ```
 
-3. _decapod-site-yaml/{your site name}/lma/lma-manifest.yaml_:
+3. _decapod-site/{your site name}/lma/lma-manifest.yaml_:
    ```yaml
    apiVersion: helm.fluxcd.io/v1
    kind: HelmRelease
