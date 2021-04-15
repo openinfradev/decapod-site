@@ -5,10 +5,9 @@ name: Validate
 # Controls when the action will run. 
 on:
   # Triggers the workflow on push or pull request events but only for the main branch
-  pull_request:
+  push:
     branches:
-      - 'main'
-
+      - main
 
 # A workflow run is made up of one or more jobs that can run sequentially or in parallel
 jobs:
@@ -22,19 +21,19 @@ jobs:
       # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
       - uses: actions/checkout@v2
 
-      - name: Run render.sh
+      - name: Run render-cd.sh
         run: |
           set -xe
-          chmod +x .github/workflows/render.sh
+          chmod +x .github/workflows/render-cd.sh
           .github/workflows/render.sh
-      - name: Trigger jenkins job
-        uses: jabbukka/jenkins-trigger@main
-        with:
-          url: ${{ secrets.JENKINS_URL }}
-          job_name: "deploy-apps"
-          user_name: ${{ secrets.JENKINS_USER }}
-          api_token: ${{ secrets.JENKINS_TOKEN }}
-          wait: "true"
-          timeout: "3600"
-          parameter: "{\"SITE_BRANCH\":\"${{ github.head_ref }}\"}"
 
+      - name: Pushes to another repository
+        uses: cpina/github-action-push-to-another-repository@master
+        env:
+          API_TOKEN_GITHUB: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          source-directory: 'cd'
+          destination-github-username: 'openinfradev'
+          destination-repository-name: 'decapod-site-cd'
+          user-email: 'taco_support@sk.com'
+          target-branch: ${{ steps.extract_branch.outputs.branch }}
