@@ -1,8 +1,6 @@
 #!/bin/bash
 DECAPOD_BASE_URL=https://github.com/openinfradev/decapod-base-yaml.git
 BRANCH="main"
-CD_FILE_TARGET_URL=https://github.com/openinfradev/decapod-site-cd.git
-CD_BRANCH="main"
 
 pwd
 ls
@@ -38,6 +36,7 @@ do
 
     if [ -f "$output" ]; then
       echo "[$i, $app] Successfully Generate Helm-Release Files!"
+      cat $output
     else
       echo "[$i, $app] Failed to render $app-manifest.yaml"
       rm -rf $i/base decapod-yaml
