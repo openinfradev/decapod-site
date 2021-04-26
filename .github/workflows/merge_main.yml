@@ -28,7 +28,7 @@ jobs:
           .github/workflows/render-cd.sh
 
       - name: Pushes to the repository for argocd
-        uses: cpina/github-action-push-to-another-repository@master
+        uses: cpina/github-action-push-to-another-repository@v1.3
         env:
           API_TOKEN_GITHUB: ${{ secrets.API_TOKEN_GITHUB }}
         with:
