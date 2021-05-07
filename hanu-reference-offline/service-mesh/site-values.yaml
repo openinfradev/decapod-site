@@ -1,0 +1,28 @@
+apiVersion: openinfradev.github.com/v1
+kind: HelmValuesTransformer
+metadata:
+  name: site
+
+global:
+  repository: https://VM-NAME-1:8879/
+
+charts:
+- name: istio-operator
+  source:
+    repository: $(repository)
+
+- name: kiali-operator
+  source:
+    repository: $(repository)
+    
+- name: jaeger-operator
+  source:
+    repository: $(repository)
+
+- name: service-mesh-controlplane
+  source:
+    repository: $(repository)
+
+- name: service-mesh-gateway
+  source:
+    repository: $(repository)
