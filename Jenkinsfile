@@ -13,9 +13,13 @@ pipeline {
       defaultValue: 'lma',
       description: 'Apps to deploy on k8s cluster(comma-seperated list)'
     )
+    string(name: 'SITE_NAME',
+      defaultValue: 'hanu-reference',
+      description: 'Site name for decapod-manifest'
+    )
     string(name: 'BASE_BRANCH',
       defaultValue: 'v1.0',
-      description: 'Branch name for decapod-site'
+      description: 'Branch name for decapod-base'
     )
     string(name: 'SITE_BRANCH',
       defaultValue: 'main',
@@ -95,7 +99,7 @@ pipeline {
             cp /opt/jenkins/.ssh/jenkins-slave-hanukey ./jenkins.key
             scp -o StrictHostKeyChecking=no -i jenkins.key -r decapod-flow/workflows/* taco-gate-inventories/scripts/deployApps.sh taco@$ADMIN_NODE_IP:/home/taco/
             ssh -o StrictHostKeyChecking=no -i jenkins.key taco@$ADMIN_NODE_IP chmod 0755 /home/taco/deployApps.sh
-            ssh -o StrictHostKeyChecking=no -i jenkins.key taco@$ADMIN_NODE_IP /home/taco/deployApps.sh --apps ${params.APPS} --site hanu-reference --site-branch $BRANCH_NAME --base-branch $BASE_BRANCH
+            ssh -o StrictHostKeyChecking=no -i jenkins.key taco@$ADMIN_NODE_IP /home/taco/deployApps.sh --apps ${params.APPS} --site ${params.SITE_NAME} --site-branch $BRANCH_NAME --base-branch ${params.BASE_BRANCH}
           """
         }
       }
