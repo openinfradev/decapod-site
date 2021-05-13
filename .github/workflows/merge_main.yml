@@ -34,7 +34,7 @@ jobs:
         with:
           source-directory: 'cd'
           destination-github-username: 'openinfradev'
-          destination-repository-name: 'decapod-site-cd'
+          destination-repository-name: 'decapod-manifests'
           user-email: 'taco_support@sk.com'
           commit-message: See ORIGIN_COMMIT
           target-branch: main
