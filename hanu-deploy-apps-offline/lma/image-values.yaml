@@ -15,7 +15,7 @@ charts:
 
 - name: eck-operator
   override:
-    image.repository: docker.elastic.co/eck/eck-operator
+    image.repository: $(registry)/eck/eck-operator
     image.tag: null
 
 - name: addons
