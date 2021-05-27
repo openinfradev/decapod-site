@@ -3,7 +3,7 @@ kind: HelmValuesTransformer
 metadata:
   name: image
 global:
-  registry: private-registry:5000
+  registry: VM-NAME-1:5000
 
 charts:
 - name: istio-operator
@@ -13,7 +13,7 @@ charts:
 
 - name: jaeger-operator
   override:
-    image.repository: $(registry)jaegertracing/jaeger-operator
+    image.repository: $(registry)/jaegertracing/jaeger-operator
     image.tag: 1.21.2
 
 - name: kiali-operator

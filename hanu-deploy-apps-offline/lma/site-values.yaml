@@ -223,3 +223,7 @@ charts:
     minio.persistence.storageClass: $(storageClassName)
     minio.persistence.accessMode: ReadWriteOnce
     minio.persistence.size: 10Gi
+
+- name: thanos-config
+  source:
+    repository: $(repository)
