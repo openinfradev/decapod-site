@@ -143,6 +143,19 @@ charts:
     # tacoWatcher.joinCluster.body.grafanaUrl: http://grafana.fed.svc.$(clusterName)
     # tacoWatcher.joinCluster.body.k8sUrl: https://kubernetes.default.svc.$(clusterName)
     kibanaInit.url: http://eck-kibana-dashboard-kb-http.lma.svc.$(clusterName):5601
+    # serviceMonitor.federations:
+    # - name: stage-federation
+    #   addresses:
+    #   - 192.168.97.22
+    #   port: 30008
+    #   interval: 30s
+    # - name: dev-federate
+    #   interval: $(federateScrapeInterval)
+    #   namespace: lma
+    #   selector:
+    #     app: prometheus
+    #     prometheus: lma-prometheus
+    #   port: 9090
 
 - name: prometheus-adapter
   override:
