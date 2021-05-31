@@ -12,6 +12,8 @@ global:
   serviceScrapeInterval: 30s
   defaultPassword: password
   defaultUser: taco
+  thanosObjstoreSecret: taco-objstore-secret
+  thanosPrimaryCluster: false
 
 charts:
 - name: prometheus-operator

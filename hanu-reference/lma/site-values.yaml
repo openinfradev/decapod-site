@@ -12,6 +12,8 @@ global:
   serviceScrapeInterval: 30s
   defaultPassword: password
   defaultUser: taco
+  thanosObjstoreSecret: taco-objstore-secret
+  thanosPrimaryCluster: false
 
 charts:
 - name: prometheus-operator
@@ -168,7 +170,9 @@ charts:
     queryFrontend.service.http.nodePort: 30007
     querier.stores:
     - prometheus-operated.lma.svc.$(clusterName):10901
+    bucketweb.enabled: $(thanosPrimaryCluster)
     bucketweb.nodeSelector: $(nodeSelector)
+    compactor.enabled: $(thanosPrimaryCluster)
     compactor.nodeSelector: $(nodeSelector)
     storegateway.nodeSelector: $(nodeSelector)
     compactor.persistence.size: 8Gi
@@ -176,6 +180,7 @@ charts:
     # - --compact.enable-vertical-compaction
     # - --deduplication.replica-label="replica"
     storegateway.persistence.size: 8Gi
+    ruler.enabled: $(thanosPrimaryCluster)
     ruler.nodeSelector: $(nodeSelector)
     ruler.alertmanagers:
     - http://fed-master-alertmanager.fed.svc.$(clusterName):9093
