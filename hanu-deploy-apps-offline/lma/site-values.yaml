@@ -11,7 +11,7 @@ global:
   serviceScrapeInterval: 30s
   defaultPassword: password
   defaultUser: taco
-  repository: https://VM-NAME-1:8879/
+  repository: LOCAL_HELM_REPO
 
 charts:
 - name: prometheus-operator
