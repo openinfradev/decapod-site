@@ -4,7 +4,7 @@ metadata:
   name: site
 
 global:
-  repository: https://VM-NAME-1:8879/
+  repository: LOCAL_HELM_REPO
 
 charts:
 - name: istio-operator
