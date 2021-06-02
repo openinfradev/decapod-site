@@ -35,6 +35,8 @@ charts:
     prometheus.prometheusSpec.retention: 2d
     prometheus.prometheusSpec.externalLabels.taco_cluster: dev
     prometheus.prometheusSpec.nodeSelector: $(nodeSelector)
+    prometheus.prometheusSpec.thanos: ~
+    prometheus.thanosService: ~
     
 - name: prometheus-fed-master
   source:
