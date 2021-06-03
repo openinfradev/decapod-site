@@ -146,7 +146,7 @@ charts:
 
 - name: kubernetes-event-exporter
   override:
-    image.repository: $(registry)/siim/kubernetes-event-exporter
+    image.repository: $(registry)/kubernetes-event-exporter
     image.tag: 0.1.0
     image.PullPolicy: IfNotPresent
 
