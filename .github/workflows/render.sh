@@ -2,11 +2,14 @@
 DECAPOD_BASE_URL=https://github.com/openinfradev/decapod-base-yaml.git
 BRANCH="main"
 
+site_list=$(ls -d */ | sed 's/\///g' | grep -v 'docs')
 if [ $# -eq 1 ]; then
   BRANCH=$1
+elif [ $# -eq 2 ]; then
+  BRANCH=$1
+  site_list=$2
 fi
 
-site_list=$(ls -d */ | sed 's/\///g' | grep -v 'docs')
 echo "Fetch base with $BRANCH branch/tag........"
 git clone -b $BRANCH $DECAPOD_BASE_URL
 if [ $? -ne 0 ]; then
