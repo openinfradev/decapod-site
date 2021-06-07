@@ -31,8 +31,10 @@ charts:
 
 - name: service-mesh-controlplane
   override: 
-    image.hub: $(registry)/istio-testing
-    image.tag: 1.11-alpha.aa439f6e4772aa52acafa11ac7a5fbdfbb160357
+    IstioOperator.image.hub: $(registry)/istio-testing
+    IstioOperator.image.tag: 1.11-alpha.aa439f6e4772aa52acafa11ac7a5fbdfbb160357
 
 - name: service-mesh-gateway
-  override: {}
+  override:
+    IstioOperator.image.hub: $(registry)/istio-testing
+    IstioOperator.image.tag: 1.11-alpha.aa439f6e4772aa52acafa11ac7a5fbdfbb160357
