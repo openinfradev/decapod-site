@@ -15,6 +15,14 @@ charts:
   override:
     image.repository: $(registry)/jaegertracing/jaeger-operator
     image.tag: 1.21.2
+    collectorImage.repository: $(registry)/jaeger-collector
+    collectorImage.tag: 1.21.0
+    agentImage.repository: $(registry)/jaeger-agent
+    agentImage.tag: 1.21.0
+    ingesterImage.repository: $(registry)/jaeger-ingester
+    ingesterImage.tag: 1.21.0
+    queryImage.repository: $(registry)/jaeger-collector
+    queryImage.tag: 1.21.0
 
 - name: kiali-operator
   override:
@@ -22,7 +30,9 @@ charts:
     image.tag: v1.30.0
 
 - name: service-mesh-controlplane
-  override: {}
+  override: 
+    image.hub: $(registry)/istio-testing
+    image.tag: 1.11-alpha.aa439f6e4772aa52acafa11ac7a5fbdfbb160357
 
 - name: service-mesh-gateway
   override: {}
