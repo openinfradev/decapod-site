@@ -15,13 +15,13 @@ charts:
   override:
     image.repository: $(registry)/jaegertracing/jaeger-operator
     image.tag: 1.21.2
-    collectorImage.repository: $(registry)/jaeger-collector
+    collectorImage.repository: $(registry)/jaegertracing/jaeger-collector
     collectorImage.tag: 1.21.0
-    agentImage.repository: $(registry)/jaeger-agent
+    agentImage.repository: $(registry)/jaegertracing/jaeger-agent
     agentImage.tag: 1.21.0
-    ingesterImage.repository: $(registry)/jaeger-ingester
+    ingesterImage.repository: $(registry)/jaegertracing/jaeger-ingester
     ingesterImage.tag: 1.21.0
-    queryImage.repository: $(registry)/jaeger-collector
+    queryImage.repository: $(registry)/jaegertracing/jaeger-collector
     queryImage.tag: 1.21.0
 
 - name: kiali-operator
