@@ -195,4 +195,4 @@ charts:
       secretName: $(thanosObjstoreSecret)
     sidecarsService.name: thanos-sidecars
     sidecarsService.endpoints:
-      - 127.0.0.1
+      - 192.168.97.102 # should not be in the loopback range (127.0.0.0/8)
