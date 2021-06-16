@@ -155,11 +155,6 @@ charts:
       interval: $(serviceScrapeInterval)
     serviceMonitor.kubelet.interval: 30s
     serviceMonitor.additionalScrapeConfigs:
-
-- name: fed-addons
-  source:
-    repository: $(repository)
-  override:
     metricbeat.enabled: false
     metricbeat.elasticsearch.host: https://eck-elasticsearch-es-http.lma.svc.$(clusterName):9200
     metricbeat.kibana.host: eck-kibana-dashboard-kb-http.lma.svc.$(clusterName):5601
