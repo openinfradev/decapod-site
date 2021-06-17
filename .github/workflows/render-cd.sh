@@ -25,7 +25,8 @@ git clone -b $BRANCH $DECAPOD_BASE_URL
 if [ $? -ne 0 ]; then
   exit $?
 fi
-mkdir cd
+
+mkdir $outputdir
 
 for i in ${site_list}
 do
@@ -33,10 +34,12 @@ do
 
   for app in `ls $i/`
   do
-    output="$i/$app/$app-manifest.yaml"
-    cp -r decapod-base-yaml/$app/base $i/
-    echo "[render-cd] Rendering $app-manifest.yaml for $i site"
-    docker run --rm -i -v $(pwd)/$i:/$i --name kustomize-build sktdev/decapod-kustomize:latest kustomize build --enable_alpha_plugins /$i/$app -o /$i/$app/$app-manifest.yaml
+    output="decapod-base-yaml/$app/$i/$app-manifest.yaml"
+    mkdir decapod-base-yaml/$app/$i
+    cp -r $i/$app/*.yaml decapod-base-yaml/$app/$i/
+
+    echo "Rendering $app-manifest.yaml for $i site"
+    docker run --rm -i -v $(pwd)/decapod-base-yaml/$app:/$app --name kustomize-build sktdev/decapod-kustomize:latest kustomize build --enable_alpha_plugins /$app/$i -o /$app/$i/$app-manifest.yaml
     build_result=$?
 
     if [ $build_result != 0 ]; then
@@ -52,7 +55,7 @@ do
     fi
 
     # cat $output
-    docker run --rm -i --net=host -v $(pwd)/$i:/$i $(pwd)/$outputdir:/cd --name generate siim/helmrelease2yaml:v1.1.0 -m $output -t -o /cd/$i/$app
+    docker run --rm -i --net=host -v $(pwd)/$i:/$i -v $(pwd)/$outputdir:/cd --name generate ghcr.io/openinfradev/helmrelease2yaml:v1.3.0 -m $output -t -o /cd/$i/$app
     rm $output
 
     rm -rf $i/base
