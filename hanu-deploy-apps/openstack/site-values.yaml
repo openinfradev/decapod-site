@@ -5,7 +5,7 @@ metadata:
 
 global:
   clusterName: cluster.local
-  storageClassName: rbd
+  storageClassName: taco-storage
   repository: https://openinfradev.github.io/hanu-helm-repo/
   externalIP: 172.16.53.26
   ceph_keyring: AQBAHAdfHQ5RLhAAzynxAYUokA55ku4ZwqVJjQ==
@@ -242,7 +242,7 @@ charts:
     pod.replicas.server: 1
     volume.size: 40Gi
     volume.enabled: true
-    volume.class_name: rbd
+    volume.class_name: $(storageClassName)
     volume.backup.class_name: $(storageClassName)
     volume.backup.size: 10Gi
     volume.backup.enabled: false
@@ -389,7 +389,7 @@ charts:
     repository: $(repository)
   override:
     pod.replicas.server: 3
-#      volume.class_name: rbd
+#   volume.class_name: $(storageClassName)
     volume.use_local_path.enabled: true
     volume.use_local_path.host_path: /ssd-data/rabbitmq-data
     volume.chown_on_start: true
