@@ -27,15 +27,6 @@ charts:
     tacoWatcher.joinCluster.image.repository: $(registry)/curl
     tacoWatcher.joinCluster.image.tag: latest
 
-- name: fed-addons
-  override:
-    kibanaInit.image.repository: $(registry)/kibana-init
-    kibanaInit.image.tag: v4
-    metricbeat.image.repository: $(registry)/metricbeat
-    metricbeat.image.tag: taco-1.0.0
-    tacoWatcher.joinCluster.image.repository: $(registry)/curl
-    tacoWatcher.joinCluster.image.tag: latest
-
 - name: fluentbit
   override:
     image.exporter.repository: $(registry)/logalert-exporter
