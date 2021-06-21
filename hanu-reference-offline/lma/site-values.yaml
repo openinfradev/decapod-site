@@ -7,7 +7,7 @@ global:
   nodeSelector:
     taco-lma: enabled
   clusterName: cluster.local
-  storageClassName: rbd
+  storageClassName: taco-storage
   repository: https://VM-NAME-1:8879/
   serviceScrapeInterval: 30s
   defaultPassword: password

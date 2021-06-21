@@ -5,7 +5,7 @@ metadata:
 
 global:
   clusterName: cluster.local
-  storageClassName: rbd
+  storageClassName: taco-storage
   repository: https://openinfradev.github.io/hanu-helm-repo/
   externalIP: 172.16.53.26
   ceph_keyring: AQBAHAdfHQ5RLhAAzynxAYUokA55ku4ZwqVJjQ==
