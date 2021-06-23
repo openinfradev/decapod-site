@@ -1,3 +1,5 @@
 resources:
   - ../base
+
+transformers:
   - image-values.yaml
