@@ -1,2 +1,3 @@
 resources:
   - ../base
+  - image-values.yaml
