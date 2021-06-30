@@ -64,16 +64,23 @@ pipeline {
     stage ('Run argo workflow') {
       steps {
         script {
-          if (params.OFFLINE) {
-	    offlineArg = "--offline"
-          }
-
           sh """
             cp /opt/jenkins/.ssh/jenkins-slave-hanukey ./jenkins.key
             scp -o StrictHostKeyChecking=no -i jenkins.key -r decapod-flow/workflows/* taco-gate-inventories/scripts/deployApps.sh taco@$ADMIN_NODE_IP:/home/taco/
             ssh -o StrictHostKeyChecking=no -i jenkins.key taco@$ADMIN_NODE_IP chmod 0755 /home/taco/deployApps.sh
-            ssh -o StrictHostKeyChecking=no -i jenkins.key taco@$ADMIN_NODE_IP /home/taco/deployApps.sh --apps ${params.APPS} --site ${params.SITE_NAME} --site-branch $BRANCH_NAME --base-branch ${params.BASE_BRANCH} ${offlineArg}
           """
+
+          if (params.OFFLINE) {
+            echo "This is offline environment."
+            sh """
+              ssh -o StrictHostKeyChecking=no -i jenkins.key taco@$ADMIN_NODE_IP /home/taco/deployApps.sh --apps ${params.APPS} --site ${params.SITE_NAME} --site-branch $BRANCH_NAME --base-branch ${params.BASE_BRANCH} --offline
+            """
+          } else {
+            echo "This is online environment."
+            sh """
+              ssh -o StrictHostKeyChecking=no -i jenkins.key taco@$ADMIN_NODE_IP /home/taco/deployApps.sh --apps ${params.APPS} --site ${params.SITE_NAME} --site-branch $BRANCH_NAME --base-branch ${params.BASE_BRANCH}
+            """
+          }
         }
       }
     }
