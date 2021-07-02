@@ -7,7 +7,7 @@ global:
   nodeSelector:
     taco-lma: enabled
   clusterName: cluster.local
-  storageClassName: rbd
+  storageClassName: taco-storage
   repository: https://openinfradev.github.io/hanu-helm-repo/
   serviceScrapeInterval: 30s
   defaultPassword: password
