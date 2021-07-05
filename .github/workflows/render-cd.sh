@@ -18,16 +18,16 @@ fi
 
 mkdir cd
 
-for i in ${site_list}
+for site in ${site_list}
 do
-  echo "Starting build manifests for '$i' site"
+  echo "Starting build manifests for '$site' site"
 
-  for app in `ls $i/`
+  for app in `ls $site/`
   do
-    output="$i/$app/$app-manifest.yaml"
-    cp -r decapod-base-yaml/$app/base $i/
-    echo "Rendering $app-manifest.yaml for $i site"
-    docker run --rm -i -v $(pwd)/$i:/$i --name kustomize-build sktdev/decapod-kustomize:latest kustomize build --enable_alpha_plugins /$i/$app -o /$i/$app/$app-manifest.yaml
+    output="$site/$app/$app-manifest.yaml"
+    cp -r decapod-base-yaml/$app/base $site/
+    echo "Rendering $app-manifest.yaml for $site site"
+    docker run --rm -i -v $(pwd)/$site:/$site --name kustomize-build sktdev/decapod-kustomize:latest kustomize build --enable_alpha_plugins /$site/$app -o /$site/$app/$app-manifest.yaml
     build_result=$?
 
     if [ $build_result != 0 ]; then
@@ -35,17 +35,17 @@ do
     fi
 
     if [ -f "$output" ]; then
-      echo "[$i, $app] Successfully Generate Helm-Release Files!"
+      echo "[$site, $app] Successfully Generate Helm-Release Files!"
       cat $output
     else
-      echo "[$i, $app] Failed to render $app-manifest.yaml"
-      rm -rf $i/base decapod-yaml
+      echo "[$site, $app] Failed to render $app-manifest.yaml"
+      rm -rf $site/base decapod-yaml
       exit 1
     fi
 
-    docker run --rm -i -v $(pwd)/$i:/$i -v $(pwd)/cd:/cd --name generate siim/helmrelease2yaml:1.0.0 $output cd/$i/$app
+    docker run --rm -i -v $(pwd)/$site:/$site -v $(pwd)/cd:/cd --name generate siim/helmrelease2yaml:1.0.0 $output cd/$site/$app
 
-    rm -rf $i/base
+    rm -rf $site/base
   done
 done
 
