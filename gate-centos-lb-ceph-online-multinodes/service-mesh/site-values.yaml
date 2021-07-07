@@ -4,7 +4,6 @@ metadata:
   name: site
 
 global:
-  repository: https://VM-NAME-1:8879/
   serviceMeshControlNodeSelector:
     servicemesh: enabled
   serviceMeshIngressNodeSelector:
@@ -24,8 +23,6 @@ global:
 
 charts:
 - name: istio-operator
-  source:
-    repository: $(repository)
   override:
     revision: $(istioRevision)
     hub: docker.io/istio
@@ -36,8 +33,6 @@ charts:
     operator.resources.requests.memory: 128Mi
 
 - name: servicemesh-controlplane
-  source:
-    repository: $(repository)
   override:
     IstioOperator.revision: $(istioRevision)
     IstioOperator.image.hub: docker.io/istio
@@ -56,8 +51,6 @@ charts:
     IstioOperator.components.pilot.k8s.nodeSelector: $(serviceMeshControlNodeSelector)
 
 - name: servicemesh-gateway
-  source:
-    repository: $(repository)
   override:
     IstioOperator.revision: $(istioRevision)
     IstioOperator.image.hub: docker.io/istio
@@ -84,14 +77,10 @@ charts:
     IstioOperator.components.egressGateways.k8s.nodeSelector: $(serviceMeshEgressNodeSelector)
 
 - name: jaeger-operator
-  source:
-    repository: $(repository)
   override:
     nodeSelector: $(serviceMeshControlNodeSelector)
 
 - name: servicemesh-jaeger-resource
-  source:
-    repository: $(repository)
   override:
     namespace: istio-system
     logLevel: debug
@@ -119,14 +108,10 @@ charts:
                   number: 16686
 
 - name: kiali-operator
-  source:
-    repository: $(repository)
   override:
     nodeSelector: $(serviceMeshControlNodeSelector)
 
 - name: servicemesh-kiali-resource
-  source:
-    repository: $(repository)
   override:
     istioComponentNamespaces.prometheus: lma
     istioNamespace: istio-system
@@ -159,22 +144,16 @@ charts:
                   number: 20001
 
 - name: servicemesh-grafana-dashboard
-  source:
-    repository: $(repository)
   override:
     namespace: istio-system
 
 - name: servicemesh-prometheusmonitor
-  source:
-    repository: $(repository)
   override:
     namespace: istio-system
     istio.interval: "15s"
     jaeger.interval: "15s"
 
 - name: servicemesh-prometheusrule
-  source:
-    repository: $(repository)
   override:
     namespace: istio-system
     aggregation.interval: "15s"
