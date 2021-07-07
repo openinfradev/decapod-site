@@ -8,8 +8,8 @@ global:
 charts:
 - name: istio-operator
   override:
-    hub: $(registry)/istio-testing
-    tag: latest
+    hub: $(registry)/istio
+    tag: 1.10.2
 
 - name: jaeger-operator
   override:
@@ -19,10 +19,31 @@ charts:
 - name: kiali-operator
   override:
     image.repo: $(registry)/kiali/kiali-operator
-    image.tag: v1.30.0
+    image.tag: v1.34.0
 
-- name: service-mesh-controlplane
+- name: servicemesh-controlplane
   override: {}
 
-- name: service-mesh-gateway
+- name: servicemesh-gateway
+  override: {}
+
+- name: jaeger-operator
+  override: {}
+
+- name: servicemesh-jaeger-resource
+  override: {}
+
+- name: kiali-operator
+  override: {}
+
+- name: servicemesh-kiali-resource
+  override: {}
+
+- name: servicemesh-grafana-dashboard
+  override: {}
+
+- name: servicemesh-prometheusmonitor
+  override: {}
+
+- name: servicemesh-prometheusrule
   override: {}
