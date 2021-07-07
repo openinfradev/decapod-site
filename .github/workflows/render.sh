@@ -19,10 +19,12 @@ do
 
   for app in `ls $i/`
   do
-    output="$i/$app/$app-manifest.yaml"
-    cp -r decapod-base-yaml/$app/base $i/
+    output="decapod-base-yaml/$app/$i/$app-manifest.yaml"
+    mkdir decapod-base-yaml/$app/$i
+    cp -r $i/$app/*.yaml decapod-base-yaml/$app/$i/
+
     echo "Rendering $app-manifest.yaml for $i site"
-    docker run --rm -i -v $(pwd)/$i:/$i --name kustomize-build sktdev/decapod-kustomize:latest kustomize build --enable_alpha_plugins /$i/$app -o /$i/$app/$app-manifest.yaml
+    docker run --rm -i -v $(pwd)/decapod-base-yaml/$app:/$app --name kustomize-build sktdev/decapod-kustomize:latest kustomize build --enable_alpha_plugins /$app/$i -o /$app/$i/$app-manifest.yaml
     build_result=$?
 
     if [ $build_result != 0 ]; then
@@ -33,11 +35,8 @@ do
       echo "[$i] Successfully Completed!"
     else
       echo "[$i] Failed to render $app-manifest.yaml"
-      rm -rf $i/base decapod-yaml
       exit 1
     fi
-    rm -rf $i/base
   done
 done
 
-rm -rf decapod-base-yaml
