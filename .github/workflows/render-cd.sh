@@ -55,7 +55,7 @@ do
     fi
 
     # cat $output
-    docker run --rm -i --net=host -v $(pwd)/$i:/$i -v $(pwd)/$outputdir:/cd --name generate ghcr.io/openinfradev/helmrelease2yaml:v1.3.0 -m $output -t -o /cd/$i/$app
+    docker run --rm -i --net=host -v $(pwd)/decapod-base-yaml:/decapod-base-yaml -v $(pwd)/$outputdir:/cd --name generate ghcr.io/openinfradev/helmrelease2yaml:v1.3.0 -m $output -t -o /cd/$i/$app
     rm $output
 
     rm -rf $i/base
