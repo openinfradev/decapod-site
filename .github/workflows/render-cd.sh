@@ -1,27 +1,25 @@
 #!/bin/bash
-DECAPOD_BASE_URL=https://github.com/openinfradev/decapod-base-yaml.git
-BRANCH="main"
 
-rm -rf decapod-base-yaml
-
+base_url=https://github.com/openinfradev/decapod-base-yaml.git
+base_branch="main"
+outputdir="cd"
 site_list=$(ls -d */ | sed 's/\///g' | grep -v 'docs' | grep -v 'cd')
 
-outputdir="cd"
-if [ $# -eq 1 ]; then
-  BRANCH=$1
-elif [ $# -eq 2 ]; then
-  BRANCH=$1
-  outputdir=$2
-elif [ $# -eq 3 ]; then
-  BRANCH=$1
-  outputdir=$2
-  site_list=$3
-fi
+while [[ "$#" -gt 0 ]]; do
+    case $1 in
+        --base-url) base_url="$2"; shift ;;
+        --base-branch) base_branch="$2"; shift ;;
+	--output-dir) outputdir="$2"; shift ;;
+	--sites) site_list="$2"; shift ;;
+        *) echo "Unknown parameter passed: $1"; exit 1 ;;
+    esac
+    shift
+done
 
 echo "[render-cd] dacapod branch=$BRANCH, output target=$outputdir ,target site(s)=${site_list}\n\n"
 
-echo "Fetch base with $BRANCH branch/tag........"
-git clone -b $BRANCH $DECAPOD_BASE_URL
+echo "Fetch base yamls with \"$base_branch\" branch/tag from $base_url"
+git clone -b $base_branch $base_url
 if [ $? -ne 0 ]; then
   exit $?
 fi

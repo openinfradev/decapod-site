@@ -8,6 +8,28 @@ on:
   push:
     branches:
       - main
+  workflow_dispatch:
+    inputs:
+      baseUrl:
+        description: 'Decapod base yaml repository URL'
+        required: true
+        default: 'https://github.com/openinfradev/decapod-base-yaml.git'
+      baseBranch:
+        description: 'Decapod base yaml repository branch or tag'
+        required: true
+        default: 'main'
+      manifestTargetUser:
+        description: 'Decapod output manifests target repository owner'
+        required: true
+        default: 'openinfradev'
+      manifestTargetRepo:
+        description: 'Decapod output manifests target repository name'
+        required: true
+        default: 'decapod-manifests'
+      manifestTargetBranch:
+        description: 'Decapod output manifests target branch name'
+        required: true
+        default: 'temporary_from_pr'
 
 # A workflow run is made up of one or more jobs that can run sequentially or in parallel
 jobs:
@@ -24,8 +46,8 @@ jobs:
       - name: Run render-cd.sh
         run: |
           set -xe
-          chmod +x .github/workflows/render-cd.sh
-          .github/workflows/render-cd.sh
+
+          .github/workflows/render-cd.sh --base-url ${{ github.event.inputs.baseUrl }} --base-branch ${{ github.event.inputs.baseBranch }}
 
       - name: Pushes to the repository for argocd
         uses: cpina/github-action-push-to-another-repository@v1.3
@@ -33,8 +55,8 @@ jobs:
           API_TOKEN_GITHUB: ${{ secrets.API_TOKEN_GITHUB }}
         with:
           source-directory: 'cd'
-          destination-github-username: 'openinfradev'
-          destination-repository-name: 'decapod-manifests'
+          destination-github-username: ${{ github.event.inputs.manifestTargetUser }}
+          destination-repository-name: ${{ github.event.inputs.manifestTargetRepo }}
           user-email: 'taco_support@sk.com'
           commit-message: See ORIGIN_COMMIT
-          target-branch: main
+          target-branch: ${{ github.event.inputs.manifestTargetBranch }}
