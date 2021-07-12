@@ -1,0 +1,10 @@
+apiVersion: openinfradev.github.com/v1
+kind: HelmValuesTransformer
+metadata:
+  name: site
+
+charts:
+- name: prepare-decapod-controller
+  override:
+    postgres.username: postgres
+    postgres.password: tacopassword
