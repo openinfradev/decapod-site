@@ -1,0 +1,23 @@
+apiVersion: openinfradev.github.com/v1
+kind: HelmValuesTransformer
+metadata:
+  name: site
+
+global:
+  repository: https://VM-NAME-1:8879/
+
+charts:
+- name: prepare-decapod-controller
+  source:
+    repository: $(repository)
+  override:
+    postgres.username: postgres
+    postgres.password: tacopassword
+
+- name: postgresql
+  source:
+    repository: $(repository)
+
+- name: argo-workflows
+  source:
+    repository: $(repository)
