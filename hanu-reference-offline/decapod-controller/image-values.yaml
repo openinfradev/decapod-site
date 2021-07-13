@@ -19,10 +19,10 @@ charts:
   override:
     controller.image.registry: $(registry)
     controller.image.repository: argoproj/workflow-controller
-    controller.image.tag: ""
+    controller.image.tag: latest
     executor.image.registry: $(registry)
     executor.image.repository: argoproj/argoexec
-    executor.image.tag: ""
+    executor.image.tag: latest
     server.image.registry: $(registry)
     server.image.repository: argoproj/argocli
-    server.image.tag: ""
+    server.image.tag: latest
