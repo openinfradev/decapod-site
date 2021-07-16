@@ -17,11 +17,7 @@ pipeline {
       defaultValue: 'hanu-reference',
       description: 'Site name for decapod-manifest'
     )
-    string(name: 'BASE_BRANCH',
-      defaultValue: 'v1.0',
-      description: 'Branch name for decapod-base'
-    )
-    string(name: 'SITE_BRANCH',
+    string(name: 'DECAPOD_MANIFEST_BRANCH',
       defaultValue: 'main',
       description: 'Branch name for decapod-site'
     )
@@ -40,8 +36,7 @@ pipeline {
       steps {
         script {
           sh """
-            git clone https://github.com/openinfradev/taco-gate-inventories.git
-            git clone -b v1.0  https://github.com/openinfradev/decapod-flow.git
+            git clone -b decapod_v2 https://github.com/openinfradev/taco-gate-inventories.git
             cp taco-gate-inventories/config/pangyo-clouds.yml ./clouds.yaml
           """
 
@@ -80,14 +75,6 @@ pipeline {
             def cephNodes = [nodeIps[0], nodeIps[1], nodeIps[2]]
             ceph_mon_host=cephNodes.join(',')
           }
-          BRANCH_NAME = "jenkins-deploy-${env.BUILD_NUMBER}"
-          sh """
-            git clone -b $SITE_BRANCH https://github.com/openinfradev/decapod-site.git
-            cd decapod-site && git checkout -b $BRANCH_NAME
-
-            git push origin $BRANCH_NAME
-            cd ..
-          """
         }
       }
     }
@@ -97,9 +84,8 @@ pipeline {
 
           sh """
             cp /opt/jenkins/.ssh/jenkins-slave-hanukey ./jenkins.key
-            scp -o StrictHostKeyChecking=no -i jenkins.key -r decapod-flow/workflows/* taco-gate-inventories/scripts/deployApps.sh taco@$ADMIN_NODE_IP:/home/taco/
             ssh -o StrictHostKeyChecking=no -i jenkins.key taco@$ADMIN_NODE_IP chmod 0755 /home/taco/deployApps.sh
-            ssh -o StrictHostKeyChecking=no -i jenkins.key taco@$ADMIN_NODE_IP /home/taco/deployApps.sh --apps ${params.APPS} --site ${params.SITE_NAME} --site-branch $BRANCH_NAME --base-branch ${params.BASE_BRANCH}
+            ssh -o StrictHostKeyChecking=no -i jenkins.key taco@$ADMIN_NODE_IP /home/taco/deployApps.sh --apps ${params.APPS} --site ${params.SITE_NAME} --manifest-branch ${params.DECAPOD_MANIFEST_BRANCH}
           """
         }
       }
@@ -124,14 +110,6 @@ pipeline {
     }
   }
   post {
-    always {
-      script {
-        sh """
-          echo "Delete temporary branch"
-          cd decapod-site && git push origin :$BRANCH_NAME
-        """
-      }
-    }
     success {
       script {
         if ( params.CLEANUP == true ) {
