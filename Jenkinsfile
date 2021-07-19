@@ -36,7 +36,7 @@ pipeline {
       steps {
         script {
           sh """
-            git clone -b decapod_v2 https://github.com/openinfradev/taco-gate-inventories.git
+            git clone https://github.com/openinfradev/taco-gate-inventories.git
             cp taco-gate-inventories/config/pangyo-clouds.yml ./clouds.yaml
           """
 
