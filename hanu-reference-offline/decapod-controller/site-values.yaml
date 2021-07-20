@@ -18,6 +18,6 @@ charts:
   source:
     repository: $(repository)
 
-- name: argo-workflows
+- name: argo-workflows-operator
   source:
     repository: $(repository)
