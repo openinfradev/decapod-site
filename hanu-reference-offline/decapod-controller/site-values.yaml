@@ -7,12 +7,13 @@ global:
   repository: https://VM-NAME-1:8879/
 
 charts:
-- name: prepare-decapod-controller
+- name: db-secret-argo
   source:
     repository: $(repository)
-  override:
-    postgres.username: postgres
-    postgres.password: tacopassword
+
+- name: db-secret-decapod-db
+  source:
+    repository: $(repository)
 
 - name: postgresql
   source:
