@@ -5,14 +5,17 @@ metadata:
 
 global:
   awsMachineType: t3.large
+  sshKeyName: taco
+  clusterName: hanu-reference
+  clusterRegion: ap-northeast-2
 
 charts:
 - name: cluster-aws-controlplane
   override:
-    sshKeyName: taco
+    sshKeyName: $(sshKeyName)
     cluster:
-      name: hanu-reference
-      region: ap-northeast-2
+      name: $(clusterName)
+      region: $(clusterRegion)
     kubernetesVersion: v1.18.16
     kubeadmControlPlane.enabled: true
     kubeadmControlPlane.controlPlaneMachineType: $(awsMachineType)
@@ -22,17 +25,16 @@ charts:
 
 - name: cluster-aws-node
   override:
-    sshKeyName: taco
+    sshKeyName: $(sshKeyName)
     cluster:
-      name: hanu-reference
-      region: ap-northeast-2
+      name: $(clusterName)
+      region: $(clusterRegion)
     kubernetesVersion: v1.18.16
     kubeadmControlPlane.enabled: false
     machinePool.enabled: true
     machinePool.replicas: 3
     machinePool.machineType: $(awsMachineType)
     machinePool.rootVolume.size: 16
-
     ################################################################################
     ## machinePool.subnets is an array of subnet configurations in VPC.
     ## cluster api controller deploy machines in multi AZ based on provided subnets.
@@ -41,6 +43,5 @@ charts:
     machinePool.subnets:
     - TO_BE_FIXED
     # - id: subnets-xxxxxxxxxx    
-
     machineDeployment.enabled: false
 
