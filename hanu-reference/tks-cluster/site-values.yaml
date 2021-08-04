@@ -5,30 +5,35 @@ metadata:
 
 global:
   awsMachineType: t3.large
+  sshKeyName: taco
+  clusterName: hanu-reference
+  clusterRegion: ap-northeast-2
+  kubernetesVersion: v1.18.16
 
 charts:
-- name: cluster-api-aws
+- name: cluster-aws-controlplane
   override:
-    sshKeyName: taco
+    sshKeyName: $(sshKeyName)
     cluster:
-      name: hanu-reference
-      region: ap-south-1
-      networkSpec:
-        ################################################################################
-        ## vpc is a vpc-id of the VPC this provider should use to create resources. 
-        ## it must set to an actual value.
-        ################################################################################
-        vpc:
-          id: vpc-0559b909b56157f3a
-        subnets:
-        - id: subnet-048582d6e591230b9
-        - id: subnet-06cfd42c5bfc5701f
-        - id: subnet-07867c6867f7f0053
-        - id: subnet-08b0c376db6d22893
-    kubernetesVersion: v1.18.16
+      name: $(clusterName)
+      region: $(clusterRegion)
+    kubernetesVersion: $(kubernetesVersion)
+    kubeadmControlPlane.enabled: true
     kubeadmControlPlane.controlPlaneMachineType: $(awsMachineType)
     kubeadmControlPlane.rootVolume.size: 16
-    machinePool.replicas: 2
+    machinePool.enabled: false
+    machineDeployment.enabled: false
+
+- name: cluster-aws-node
+  override:
+    sshKeyName: $(sshKeyName)
+    cluster:
+      name: $(clusterName)
+      region: $(clusterRegion)
+    kubernetesVersion: $(kubernetesVersion)
+    kubeadmControlPlane.enabled: false
+    machinePool.enabled: true
+    machinePool.replicas: 3
     machinePool.machineType: $(awsMachineType)
     machinePool.rootVolume.size: 16
     ################################################################################
@@ -37,5 +42,7 @@ charts:
     ## it must set to an actual value.
     ################################################################################
     machinePool.subnets:
-    - id: subnet-08b0c376db6d22893
-    - id: subnet-06cfd42c5bfc5701f
+    - TO_BE_FIXED
+    # - id: subnets-xxxxxxxxxx    
+    machineDeployment.enabled: false
+
