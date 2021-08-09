@@ -183,3 +183,12 @@ charts:
     sidecarsService.name: thanos-sidecars
     sidecarsService.endpoints:
       - 192.168.97.102 # should not be in the loopback range (127.0.0.0/8)
+
+- name: prepare-etcd-secret
+  override:
+    nodeSelector:
+      "node-role.kubernetes.io/master": ""
+    tolerations:
+      - key: "node-role.kubernetes.io/master"
+        effect: "NoSchedule"
+        operator: "Exists"
