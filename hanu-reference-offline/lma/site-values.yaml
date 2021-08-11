@@ -37,7 +37,10 @@ charts:
     prometheus.prometheusSpec.retention: 2d
     prometheus.prometheusSpec.externalLabels.taco_cluster: dev
     prometheus.prometheusSpec.nodeSelector: $(nodeSelector)
-    
+
+    alertmanager.service.type: NodePort
+    alertmanager.service.nodePort: 30111
+    alertmanager.alertmanagerSpec.alertmanagerConfigSelector.matchLabels.alertmanagerConfig: example
     alertmanager.alertmanagerSpec.nodeSelector: $(nodeSelector)
     alertmanager.alertmanagerSpec.retention: 2h
     alertmanager.config.global.slack_api_url: https://hooks.slack.com/services/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
@@ -170,21 +173,16 @@ charts:
   override:
     global.storageClass: $(storageClassName)
     clusterDomain: $(clusterName)
-    objstoreConfig: |-
-      type: s3
-      config:
-        bucket: thanos
-        endpoint: {{ include "thanos.minio.fullname" . }}.fed.svc.$(clusterName):9000
-        access_key: $(defaultUser)
-        secret_key: $(defaultPassword)
-        insecure: true
+    existingObjstoreSecret: $(thanosObjstoreSecret)
     query.nodeSelector: $(nodeSelector)
     queryFrontend.nodeSelector: $(nodeSelector)
     queryFrontend.service.type: NodePort
     queryFrontend.service.http.nodePort: 30007
     querier.stores:
     - prometheus-operated.lma.svc.$(clusterName):10901
+    bucketweb.enabled: $(thanosPrimaryCluster)
     bucketweb.nodeSelector: $(nodeSelector)
+    compactor.enabled: $(thanosPrimaryCluster)
     compactor.nodeSelector: $(nodeSelector)
     storegateway.nodeSelector: $(nodeSelector)
     compactor.persistence.size: 8Gi
@@ -192,9 +190,10 @@ charts:
     # - --compact.enable-vertical-compaction
     # - --deduplication.replica-label="replica"
     storegateway.persistence.size: 8Gi
+    ruler.enabled: $(thanosPrimaryCluster)
     ruler.nodeSelector: $(nodeSelector)
     ruler.alertmanagers:
-    - http://fed-master-alertmanager.fed.svc.$(clusterName):9093
+    - http://fed-master-alertmanager.lma.svc.$(clusterName):9093
     ruler.persistence.size: 8Gi
     minio.accessKey.password: $(defaultUser)
     minio.secretKey.password: $(defaultPassword)
@@ -202,3 +201,17 @@ charts:
     minio.persistence.storageClass: $(storageClassName)
     minio.persistence.accessMode: ReadWriteOnce
     minio.persistence.size: 10Gi
+
+- name: thanos-config
+  source:
+    repository: $(repository)
+  override:
+    objectStorage:
+      bucketName: thanos
+      endpoint: thanos-minio.lma.svc.$(clusterName):9000
+      access_key: $(defaultUser)
+      secret_key: $(defaultPassword)
+      secretName: $(thanosObjstoreSecret)
+    sidecarsService.name: thanos-sidecars
+    sidecarsService.endpoints:
+      - 192.168.97.102 # should not be in the loopback range (127.0.0.0/8)

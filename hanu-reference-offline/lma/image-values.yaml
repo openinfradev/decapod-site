@@ -93,19 +93,6 @@ charts:
     image.repository: $(registry)/k8s-prometheus-adapter-amd64
     image.tag: v0.7.0
 
-- name: prometheus-fed-master
-  override:
-    alertmanager.alertmanagerSpec.image.repository: $(registry)/prometheus/alertmanager
-    alertmanager.alertmanagerSpec.image.tag: v0.21.0
-    prometheusOperator.admissionWebhooks.patch.image.repository: $(registry)/kube-webhook-certgen
-    prometheusOperator.admissionWebhooks.patch.image.tag: v1.5.0
-    prometheusOperator.image.repository: $(registry)/prometheus-operator/prometheus-operator
-    prometheusOperator.image.tag: v0.46.0
-    prometheusOperator.prometheusConfigReloaderImage.repository: $(registry)/prometheus-operator/prometheus-config-reloader
-    prometheusOperator.prometheusConfigReloaderImage.tag: v0.46.0
-    prometheus.prometheusSpec.image.repository: $(registry)/prometheus/prometheus
-    prometheus.prometheusSpec.image.tag: v2.24.0
-
 - name: prometheus-node-exporter
   override:
     image.repository: $(registry)/prometheus/node-exporter
