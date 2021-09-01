@@ -5,6 +5,7 @@ BRANCH="main"
 rm -rf decapod-base-yaml
 
 site_list=$(ls -d */ | sed 's/\///g' | grep -v 'docs' | grep -v 'cd')
+#site_list=$(ls -d */ | sed 's/\///g' | grep -v 'docs' | grep -v 'cd' | grep -v hanu-reference-offline | grep hanu-reference)
 
 outputdir="cd"
 if [ $# -eq 1 ]; then
@@ -21,7 +22,8 @@ fi
 echo "[render-cd] dacapod branch=$BRANCH, output target=$outputdir ,target site(s)=${site_list}\n\n"
 
 echo "Fetch base with $BRANCH branch/tag........"
-git clone -b $BRANCH $DECAPOD_BASE_URL
+#git clone -b $BRANCH $DECAPOD_BASE_URL
+git clone -b $BRANCH $DECAPOD_BASE_URL decapod-base-yaml
 if [ $? -ne 0 ]; then
   exit $?
 fi

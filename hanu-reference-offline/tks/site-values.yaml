@@ -1,0 +1,53 @@
+apiVersion: openinfradev.github.com/v1
+kind: HelmValuesTransformer
+metadata:
+  name: site
+
+global:
+  repository: https://VM-NAME-1:8879/
+
+charts:
+- name: tks-contract
+  source:
+    repository: $(repository)
+  override:
+    image.pullPolicy: Always
+    args:
+      port: 9110
+      dbUrl: postgresql.decapod-db.svc
+      dbPort: 5432
+      dbUser: tksuser
+      dbPassword: tkspassword
+      tksInfoAddress: tks-info.tks.svc
+      tksInfoPort: 9110
+    db:
+      adminUser: postgres
+      adminPassword: tacopassword
+      dbName: tks
+
+- name: tks-info
+  source:
+    repository: $(repository)
+  override:
+    image.pullPolicy: Always
+    args:
+      port: 9110
+      dbUrl: postgresql.decapod-db.svc
+      dbPort: 5432
+      dbUser: tksuser
+      dbPassword: tkspassword
+
+    db:
+      adminUser: postgres
+      adminPassword: tacopassword
+      dbName: tks
+
+- name: tks-cluster-lcm
+  source:
+    repository: $(repository)
+  override:
+    image.pullPolicy: Always
+    args:
+      port: 9110
+      tksInfoAddress: tks-info.tks.svc
+      tksInfoPort: 9110
