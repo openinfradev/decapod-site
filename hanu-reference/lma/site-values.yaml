@@ -80,6 +80,7 @@ charts:
   override:
     adminPassword: password
     persistence.storageClassName: $(storageClassName)
+    sidecar.dashboards.searchNamespace: ALL
 
 - name: fluentbit-operator
   override:
@@ -129,6 +130,12 @@ charts:
     serviceMonitor.additionalScrapeConfigs:
     metricbeat.enabled: false
     kibanaInit.url: http://eck-kibana-dashboard-kb-http.lma.svc.$(clusterName):5601
+    grafanaDashboard.istio.enabled: false
+    grafanaDashboard.jaeger.enabled: false
+    serviceMonitor.istio.enabled: false
+    serviceMonitor.jaeger.enabled: false
+    prometheusRules.istio.aggregation.enabled: false
+    prometheusRules.istio.optimization.enabled: false
 
 - name: prometheus-adapter
   override:
