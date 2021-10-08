@@ -4,9 +4,9 @@ BRANCH="main"
 
 rm -rf decapod-base-yaml
 
-site_list=$(ls -d */ | sed 's/\///g' | grep -v 'docs' | grep -v 'cd')
+site_list=$(ls -d */ | sed 's/\///g' | grep -v 'docs' | grep -v 'output')
 
-outputdir="cd"
+outputdir="output"
 if [ $# -eq 1 ]; then
   BRANCH=$1
 elif [ $# -eq 2 ]; then
