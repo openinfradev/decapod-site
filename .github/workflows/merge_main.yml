@@ -33,7 +33,7 @@ jobs:
         env:
           API_TOKEN_GITHUB: ${{ secrets.API_TOKEN_GITHUB }}
         with:
-          source-directory: 'cd'
+          source-directory: 'output'
           destination-github-username: 'openinfradev'
           destination-repository-name: 'decapod-manifests'
           user-email: 'taco_support@sk.com'
