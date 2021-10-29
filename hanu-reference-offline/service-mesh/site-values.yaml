@@ -4,7 +4,7 @@ metadata:
   name: site
 
 global:
-  repository: https://VM-NAME-1:8879/
+  repository: ${LOCAL_HELM_REPO}
   serviceMeshControlNodeSelector:
     servicemesh: enabled
   serviceMeshIngressNodeSelector:
@@ -72,7 +72,8 @@ charts:
     IstioOperator.components.ingressGateways.k8s.hpaSpec.minReplicas: 1
     IstioOperator.components.ingressGateways.k8s.nodeSelector: $(serviceMeshIngressNodeSelector)
     IstioOperator.components.ingressGateways.k8s.service.type: NodePort
-    IstioOperator.components.ingressGateways.k8s.service.ports.httpNodePort: 31081
+    IstioOperator.components.ingressGateways.k8s.service.ports.statusNodePort: 31021
+    IstioOperator.components.ingressGateways.k8s.service.ports.httpNodePort: 31080
     IstioOperator.components.ingressGateways.k8s.service.ports.httpsNodePort: 31443
     IstioOperator.components.egressGateways.name: istio-egress-gateway
     IstioOperator.components.egressGateways.namespace: istio-system
@@ -103,6 +104,7 @@ charts:
       serverUrls: https://eck-elasticsearch-es-http.lma.svc:9200
       username: elastic
       password: tacoword
+    query.basePath: /
     JaegerIngress:
       enabled: true
       namespace: istio-system
@@ -163,6 +165,8 @@ charts:
     repository: $(repository)
   override:
     namespace: istio-system
+    dashboards:
+      label: grafana_dashboard
 
 - name: servicemesh-prometheusmonitor
   source:
