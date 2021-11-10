@@ -8,7 +8,7 @@ global:
     taco-lma: enabled
   clusterName: cluster.local
   storageClassName: taco-storage
-  repository: https://VM-NAME-1:8879/
+  repository: ${LOCAL_HELM_REPO}
   serviceScrapeInterval: 30s
   defaultPassword: password
   defaultUser: taco
@@ -98,6 +98,7 @@ charts:
   override:
     adminPassword: password
     persistence.storageClassName: $(storageClassName)
+    sidecar.dashboards.searchNamespace: ALL
 
 - name: fluentbit-operator
   source:
@@ -153,6 +154,12 @@ charts:
     serviceMonitor.additionalScrapeConfigs:
     metricbeat.enabled: false
     kibanaInit.url: http://eck-kibana-dashboard-kb-http.lma.svc.$(clusterName):5601
+    grafanaDashboard.istio.enabled: false
+    grafanaDashboard.jaeger.enabled: false
+    serviceMonitor.istio.enabled: false
+    serviceMonitor.jaeger.enabled: false
+    prometheusRules.istio.aggregation.enabled: false
+    prometheusRules.istio.optimization.enabled: false
 
 - name: prometheus-adapter
   source:
@@ -215,3 +222,13 @@ charts:
     sidecarsService.name: thanos-sidecars
     sidecarsService.endpoints:
       - 192.168.97.102 # should not be in the loopback range (127.0.0.0/8)
+- name: prepare-etcd-secret
+  source:
+    repository: $(repository)
+  override:
+    nodeSelector:
+      "node-role.kubernetes.io/master": ""
+    tolerations:
+      - key: "node-role.kubernetes.io/master"
+        effect: "NoSchedule"
+        operator: "Exists"
