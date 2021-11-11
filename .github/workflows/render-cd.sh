@@ -1,22 +1,37 @@
 #!/bin/bash
 DECAPOD_BASE_URL=https://github.com/openinfradev/decapod-base-yaml.git
 BRANCH="main"
+DOCKER_IMAGE_REPO="docker.io"
+GITHUB_IMAGE_REPO="ghcr.io"
+outputdir="output"
 
 rm -rf decapod-base-yaml
-
 site_list=$(ls -d */ | sed 's/\///g' | grep -v 'docs' | grep -v 'output')
 
-outputdir="output"
-if [ $# -eq 1 ]; then
-  BRANCH=$1
-elif [ $# -eq 2 ]; then
-  BRANCH=$1
-  outputdir=$2
-elif [ $# -eq 3 ]; then
-  BRANCH=$1
-  outputdir=$2
-  site_list=$3
-fi
+function usage {
+        echo -e "\nUsage: $0 [--site TARGET_SITE] [--base_url DECAPOD_BASE_URL] [--registry REGISTRY_URL]"
+        exit 1
+}
+
+# We use "$@" instead of $* to preserve argument-boundary information
+ARGS=$(getopt -o 'b:s:r:h' --long 'base-url:,site:,registry:,help' -- "$@") || usage
+eval "set -- $ARGS"
+
+while true; do
+    case $1 in
+      (-h|--help)
+            usage; shift 2;;
+      (-b|--base-url)
+            DECAPOD_BASE_URL=$2; shift 2;;
+      (-s|--site)
+            site_list=$2; shift 2;;
+      (-r|--registry)
+            DOCKER_IMAGE_REPO=$2
+            GITHUB_IMAGE_REPO=$2; shift 2;;
+      (--)  shift; break;;
+      (*)   exit 1;;           # error
+    esac
+done
 
 echo "[render-cd] dacapod branch=$BRANCH, output target=$outputdir ,target site(s)=${site_list}\n\n"
 
@@ -39,7 +54,7 @@ do
     cp -r $i/$app/*.yaml decapod-base-yaml/$app/$i/
 
     echo "Rendering $app-manifest.yaml for $i site"
-    docker run --rm -i -v $(pwd)/decapod-base-yaml/$app:/$app --name kustomize-build sktdev/decapod-kustomize:latest kustomize build --enable_alpha_plugins /$app/$i -o /$app/$i/$app-manifest.yaml
+    docker run --rm -i -v $(pwd)/decapod-base-yaml/$app:/$app --name kustomize-build ${DOCKER_IMAGE_REPO}/sktdev/decapod-kustomize:latest kustomize build --enable_alpha_plugins /$app/$i -o /$app/$i/$app-manifest.yaml
     build_result=$?
 
     if [ $build_result != 0 ]; then
@@ -55,7 +70,7 @@ do
     fi
 
     # cat $output
-    docker run --rm -i --net=host -v $(pwd)/decapod-base-yaml:/decapod-base-yaml -v $(pwd)/$outputdir:/cd --name generate ghcr.io/openinfradev/helmrelease2yaml:v1.3.0 -m $output -t -o /cd/$i/$app
+    docker run --rm -i --net=host -v $(pwd)/decapod-base-yaml:/decapod-base-yaml -v $(pwd)/$outputdir:/cd --name generate ${GITHUB_IMAGE_REPO}/openinfradev/helmrelease2yaml:v1.3.0 -m $output -t -o /cd/$i/$app
     rm $output
 
     rm -rf $i/base
