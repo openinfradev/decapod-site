@@ -128,11 +128,6 @@ charts:
     image.tag: 0.1.0
     image.PullPolicy: IfNotPresent
 
-- name: taco-watcher
-  override:
-    image.repository: sktdev/taco-watcher
-    image.tag: latest
-
 - name: thanos
   override:
     image.registry: $(registry)
