@@ -72,7 +72,8 @@ charts:
 
 - name: kube-state-metrics
   override:
-    image.repository: $(registry)/bitnami/kube-state-metrics
+    global.imageRegistry: $(registry)
+    image.repository: bitnami/kube-state-metrics
     image.tag: 1.9.7-debian-10-r143
 
 - name: prometheus
