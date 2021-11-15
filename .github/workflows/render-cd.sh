@@ -6,7 +6,7 @@ GITHUB_IMAGE_REPO="ghcr.io"
 outputdir="output"
 
 rm -rf decapod-base-yaml
-site_list=$(ls -d */ | sed 's/\///g' | grep -v 'docs' | grep -v 'output')
+site_list=$(ls -d */ | sed 's/\///g' | grep -v 'docs' | grep -v 'output' | grep -v 'offline')
 
 function usage {
         echo -e "\nUsage: $0 [--site TARGET_SITE] [--base_url DECAPOD_BASE_URL] [--registry REGISTRY_URL]"
