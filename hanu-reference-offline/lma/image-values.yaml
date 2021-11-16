@@ -15,8 +15,8 @@ charts:
 
 - name: eck-operator
   override:
-    image.repository: docker.elastic.co/eck/eck-operator
-    image.tag: null
+    image.repository: $(registry)/eck/eck-operator
+    image.tag: 1.6.0
 
 - name: addons
   override:
@@ -72,7 +72,8 @@ charts:
 
 - name: kube-state-metrics
   override:
-    image.repository: $(registry)/bitnami/kube-state-metrics
+    global.imageRegistry: $(registry)
+    image.repository: bitnami/kube-state-metrics
     image.tag: 1.9.7-debian-10-r143
 
 - name: prometheus
@@ -128,11 +129,6 @@ charts:
     image.tag: 0.1.0
     image.PullPolicy: IfNotPresent
 
-- name: taco-watcher
-  override:
-    image.repository: sktdev/taco-watcher
-    image.tag: latest
-
 - name: thanos
   override:
     image.registry: $(registry)
@@ -153,3 +149,7 @@ charts:
 
 - name: thanos-config
   override: {}
+
+- name: prepare-etcd-secret
+  override:
+    image.repository: $(registry)/hyperkube

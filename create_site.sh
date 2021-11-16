@@ -49,7 +49,7 @@ then
 	for yaml in $(find $SITE_NAME -type f -name site-values.yaml -o -name image-values.yaml)
         do
 		cp $yaml .tmp-yaml
-                cat .tmp-yaml | envsubst > $yaml
+                cat .tmp-yaml | envsubst '$LOCAL_HELM_REPO $LOCAL_REGISTRY' > $yaml
 		rm .tmp-yaml
         done
 fi
