@@ -95,19 +95,7 @@ charts:
       password: tacoword
     query.basePath: /
     JaegerIngress:
-      enabled: true
-      namespace: istio-system
-      rules:
-      - host: $(jaegerDomain)
-        http:
-          paths:
-          - path: /
-            pathType: Prefix
-            backend:
-              service:
-                name: jaeger-operator-jaeger-query
-                port:
-                  number: 16686
+      enabled: false
 
 - name: kiali-operator
   override:
@@ -131,19 +119,7 @@ charts:
     externalServices.grafana.inClusterUrl: http://grafana.lma.svc:80
     externalServices.grafana.url: http://VM-NAME-1:30009
     KialiIngress:
-      enabled: true
-      namespace: istio-system
-      rules:
-      - host: $(kialiDomain)
-        http:
-          paths:
-          - path: /
-            pathType: Prefix
-            backend:
-              service:
-                name: kaili
-                port:
-                  number: 20001
+      enabled: false
 
 - name: servicemesh-grafana-dashboard
   override:
