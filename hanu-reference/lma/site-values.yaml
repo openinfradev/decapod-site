@@ -6,10 +6,10 @@ metadata:
 global:
   nodeSelector:
     taco-lma: enabled
-  clusterName: cluster.local
-  storageClassName: taco-storage
-  repository: https://openinfradev.github.io/helm-repo/
-  serviceScrapeInterval: 30s
+  clusterName: dev
+  storageClassName: local-path
+  serviceScrapeInterval: 10s
+  federateScrapeInterval: 10s
   defaultPassword: password
   defaultUser: taco
   thanosObjstoreSecret: taco-objstore-secret
@@ -25,19 +25,67 @@ charts:
 - name: prometheus
   override:
     kubeEtcd.endpoints:
-    - 172.27.1.222
+    - 192.168.48.202
+    - 192.168.48.203
+    - 192.168.48.204  
     prometheus.prometheusSpec.storageSpec.volumeClaimTemplate.spec.storageClassName: $(storageClassName)
-    prometheus.prometheusSpec.storageSpec.volumeClaimTemplate.spec.resources.requests.storage: 20Gi
-    prometheus.prometheusSpec.retention: 2d
-    prometheus.prometheusSpec.externalLabels.taco_cluster: dev
+    prometheus.prometheusSpec.storageSpec.volumeClaimTemplate.spec.resources.requests.storage: 200Gi
+    prometheus.prometheusSpec.retention: 30d
+    prometheus.prometheusSpec.externalLabels.taco_cluster: $(clusterName)
     prometheus.prometheusSpec.nodeSelector: $(nodeSelector)
     
     alertmanager.service.type: NodePort
     alertmanager.service.nodePort: 30111
     alertmanager.alertmanagerSpec.alertmanagerConfigSelector.matchLabels.alertmanagerConfig: example
     alertmanager.alertmanagerSpec.nodeSelector: $(nodeSelector)
-    alertmanager.alertmanagerSpec.retention: 2h
-    alertmanager.config.global.slack_api_url: https://hooks.slack.com/services/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
+    alertmanager.alertmanagerSpec.retention: 120h
+    alertmanager.config.global.slack_api_url: https://hooks.slack.com/services/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
+    prometheus.prometheusSpec.nodeSelector: $(nodeSelector)
+    prometheus.prometheusSpec.storageSpec.volumeClaimTemplate.spec.storageClassName: $(storageClassName)
+    prometheus.prometheusSpec.storageSpec.volumeClaimTemplate.spec.resources.requests.storage: 500Gi
+    alertmanager.config.receivers:
+    - name: 'default-alert'
+      slack_configs:
+      - channel: "#alert"
+        username: "Prometheus"
+        send_resolved: true
+        title: |-
+          [{{ .Status | toUpper }}{{ if eq .Status "firing" }}:{{ .Alerts.Firing | len }}{{ end }}] {{ if or (and (eq (len .  Alerts.Firing) 1) (eq (len .Alerts.Resolved) 0)) (and (eq (len .Alerts.Firing) 0) (eq (len .Alerts.Resolved) 1)) }} {{ range .    Alerts.Firing }}{{ .Labels.alertname }}{{ end }}{{ range .Alerts.Resolved }}{{ .Labels.alertname }}{{ end }}{{ end }}
+        text: |-
+          {{ if or (and (eq (len .Alerts.Firing) 1) (eq (len .Alerts.Resolved) 0)) (and (eq (len .Alerts.Firing) 0) (eq (len .Alerts.Resolved) 1)) }} {{ range .Alerts.Firing }}{{ .Annotations.message }}{{ end }}{{ range .Alerts.Resolved }}{{ .Annotations.message  }}{{ end }}
+          {{ else }}
+          {{ if gt (len .Alerts.Firing) 0 }}
+          *Alerts Firing:*
+            {{ range .Alerts.Firing }}- {{ .Labels.alertname  }}: {{ .Annotations.message }}
+          {{ end }}{{ end }}
+          {{ if gt (len .Alerts.Resolved) 0 }}
+          *Alerts Resolved:*
+            {{ range .Alerts.Resolved }}- {{ .Labels.alertname }}: {{ .Annotations.message }}
+          {{ end }}{{ end }}
+          {{ end }}
+    - name: 'slack-alert'
+      slack_configs:
+      - channel: "#info-by-system"  #FIXME
+        username: "Prometheus"
+        send_resolved: true
+        title: |-
+          [{{ .Status | toUpper }}{{ if eq .Status "firing" }}:{{ .Alerts.Firing | len }}{{ end }}] {{ if or (and (eq (len .  Alerts.Firing) 1) (eq (len .Alerts.Resolved) 0)) (and (eq (len .Alerts.Firing) 0) (eq (len .Alerts.Resolved) 1)) }} {{ range .    Alerts.Firing }}{{ .Labels.alertname }}{{ end }}{{ range .Alerts.Resolved }}{{ .Labels.alertname }}{{ end }}{{ end }}
+        text: |-
+          {{ if or (and (eq (len .Alerts.Firing) 1) (eq (len .Alerts.Resolved) 0)) (and (eq (len .Alerts.Firing) 0) (eq (len .Alerts.Resolved) 1)) }} {{ range .Alerts.Firing }}{{ .Annotations.message }}{{ end }}{{ range .Alerts.Resolved }}{{ .Annotations.message  }}{{ end }}
+          {{ else }}
+          {{ if gt (len .Alerts.Firing) 0 }}
+          *Alerts Firing:*
+            {{ range .Alerts.Firing }}- {{ .Labels.alertname  }}: {{ .Annotations.message }}
+          {{ end }}{{ end }}
+          {{ if gt (len .Alerts.Resolved) 0 }}
+          *Alerts Resolved:*
+            {{ range .Alerts.Resolved }}- {{ .Labels.alertname }}: {{ .Annotations.message }}
+          {{ end }}{{ end }}
+          {{ end }}
+    - name: 'telegram-alert'
+      webhook_configs:
+      - send_resolved: True
+        url: http://prometheus-bot:9087/alert/-GROUP_ID
 
 - name: prometheus-node-exporter  
 
@@ -56,25 +104,29 @@ charts:
 - name: eck-resource
   override:
     kibana.nodeSelector: $(nodeSelector)
+
+    kibana.nodeSelector: $(nodeSelector)
     
     elasticsearch.nodeSets.master.nodeSelector: $(nodeSelector)
-    elasticsearch.nodeSets.master.count: 1
-    elasticsearch.nodeSets.master.javaOpts: "-Xms1g -Xmx1g"
+    elasticsearch.nodeSets.master.javaOpts: "-Xms2g -Xmx2g"
     elasticsearch.nodeSets.master.limitCpu: 2
     elasticsearch.nodeSets.master.limitMem: 4Gi
     elasticsearch.nodeSets.master.pvc.storageClassName: $(storageClassName)
-    elasticsearch.nodeSets.master.pvc.size: 1Gi
+    elasticsearch.nodeSets.master.pvc.size: 2Gi
 
     elasticsearch.nodeSets.hotdata.nodeSelector: $(nodeSelector)
-    elasticsearch.nodeSets.hotdata.count: 1
-    elasticsearch.nodeSets.hotdata.javaOpts: "-Xms1g -Xmx1g"
+    elasticsearch.nodeSets.hotdata.javaOpts: "-Xms10g -Xmx10g"
     elasticsearch.nodeSets.hotdata.limitCpu: 2
-    elasticsearch.nodeSets.hotdata.limitMem: 2Gi
+    elasticsearch.nodeSets.hotdata.limitMem: 20Gi
     elasticsearch.nodeSets.hotdata.pvc.storageClassName: $(storageClassName)
-    elasticsearch.nodeSets.hotdata.pvc.size: 10Gi
+    elasticsearch.nodeSets.hotdata.pvc.size: 200Gi
 
-    elasticsearch.nodeSets.client.enabled: false
-
+    elasticsearch.nodeSets.client.enabled: true
+    elasticsearch.nodeSets.client.nodeSelector: $(nodeSelector)
+    elasticsearch.nodeSets.client.javaOpts: "-Xms10g -Xmx10g"
+    elasticsearch.nodeSets.client.limitCpu: 2
+    elasticsearch.nodeSets.client.limitMem: 20Gi
+    elasticsearch.nodeSets.client.pvc.storageClassName: $(storageClassName)
 
 - name: grafana
   override:
@@ -149,34 +201,59 @@ charts:
   override:
     global.storageClass: $(storageClassName)
     clusterDomain: $(clusterName)
+    objstoreConfig: |-
+      type: s3
+      config:
+        bucket: thanos
+        endpoint: {{ include "thanos.minio.fullname" . }}.fed.svc.$(clusterName):9000
+        access_key: $(defaultUser)
+        secret_key: $(defaultPassword)
+        insecure: true
     existingObjstoreSecret: $(thanosObjstoreSecret)
+
+    bucketweb.enabled: $(thanosPrimaryCluster)
+    bucketweb.nodeSelector: $(nodeSelector)
+
+    compactor.enabled: $(thanosPrimaryCluster)
+    compactor.nodeSelector: $(nodeSelector)
+
+    compactor.persistence.size: 8Gi
+    # compactor.extraFlags:
+    # - --compact.enable-vertical-compaction
+    # - --deduplication.replica-label="replica"
+
+    storegateway.nodeSelector: $(nodeSelector)
+    storegateway.persistence.size: 80Gi
+
     query.nodeSelector: $(nodeSelector)
     queryFrontend.nodeSelector: $(nodeSelector)
     queryFrontend.service.type: NodePort
     queryFrontend.service.http.nodePort: 30007
     querier.stores:
     - prometheus-operated.lma.svc.$(clusterName):10901
-    bucketweb.enabled: $(thanosPrimaryCluster)
-    bucketweb.nodeSelector: $(nodeSelector)
-    compactor.enabled: $(thanosPrimaryCluster)
-    compactor.nodeSelector: $(nodeSelector)
-    storegateway.nodeSelector: $(nodeSelector)
-    compactor.persistence.size: 8Gi
-    # compactor.extraFlags:
-    # - --compact.enable-vertical-compaction
-    # - --deduplication.replica-label="replica"
-    storegateway.persistence.size: 8Gi
+    querier:
+      stores:
+        - 192.168.5.61:30901
+        - 192.168.48.202:30901
+
     ruler.enabled: $(thanosPrimaryCluster)
     ruler.nodeSelector: $(nodeSelector)
     ruler.alertmanagers:
     - http://fed-master-alertmanager.lma.svc.$(clusterName):9093
     ruler.persistence.size: 8Gi
+    ruler.config: |-
+      groups:
+        - name: "metamonitoring"
+          rules:
+            - alert: "PrometheusDown"
+              expr: absent(up{prometheus="monitoring/prometheus-operator"})
+
     minio.accessKey.password: $(defaultUser)
     minio.secretKey.password: $(defaultPassword)
     minio.defaultBuckets: thanos
     minio.persistence.storageClass: $(storageClassName)
     minio.persistence.accessMode: ReadWriteOnce
-    minio.persistence.size: 10Gi
+    minio.persistence.size: 100Gi
 
 - name: thanos-config
   override:
@@ -188,7 +265,7 @@ charts:
       secretName: $(thanosObjstoreSecret)
     sidecarsService.name: thanos-sidecars
     sidecarsService.endpoints:
-      - 192.168.97.102 # should not be in the loopback range (127.0.0.0/8)
+      - 192.168.48.202 # should not be in the loopback range (127.0.0.0/8)
 
 - name: prepare-etcd-secret
   override:
@@ -198,3 +275,4 @@ charts:
       - key: "node-role.kubernetes.io/master"
         effect: "NoSchedule"
         operator: "Exists"
+
