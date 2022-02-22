@@ -70,7 +70,7 @@ do
     fi
 
     # cat $output
-    docker run --rm -i --net=host -v $(pwd)/decapod-base-yaml:/decapod-base-yaml -v $(pwd)/$outputdir:/cd --name generate ${GITHUB_IMAGE_REPO}/openinfradev/helmrelease2yaml:v1.3.0 -m $output -t -o /cd/$i/$app
+    docker run --rm -i --net=host -v $(pwd)/decapod-base-yaml:/decapod-base-yaml -v $(pwd)/$outputdir:/cd --name generate ${DOCKER_IMAGE_REPO}/sktcloud/helmrelease2yaml:v1.5.0 -m $output -t -o /cd/$i/$app
     rm $output
 
     rm -rf $i/base
