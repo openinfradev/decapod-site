@@ -1,0 +1,14 @@
+apiVersion: openinfradev.github.com/v1
+kind: HelmValuesTransformer
+metadata:
+  name: site
+
+global:
+  clusterName: cluster.local
+
+charts:
+- name: keycloak-operator
+  override:
+- name: keycloak-resources
+  override:
+    keycloak.externalDatabase.address: postgresql.decapod-db.svc.$(clusterName)
