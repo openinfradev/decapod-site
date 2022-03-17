@@ -40,6 +40,8 @@ charts:
     alertmanager.config.global.slack_api_url: https://hooks.slack.com/services/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
 
 - name: prometheus-node-exporter  
+  override:
+    hostNetwork: false
 
 - name: kube-state-metrics
   override:
@@ -52,6 +54,7 @@ charts:
 - name: prometheus-process-exporter
   override:
     conf.processes: dockerd,kubelet,kube-proxy,ntpd,node
+    pod.hostNetwork: false
 
 - name: eck-resource
   override:
