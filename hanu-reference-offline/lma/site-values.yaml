@@ -30,8 +30,6 @@ charts:
   source:
     repository: $(repository)
   override:
-    kubeEtcd.endpoints:
-    - 172.27.1.222
     prometheus.prometheusSpec.storageSpec.volumeClaimTemplate.spec.storageClassName: $(storageClassName)
     prometheus.prometheusSpec.storageSpec.volumeClaimTemplate.spec.resources.requests.storage: 20Gi
     prometheus.prometheusSpec.retention: 2d
