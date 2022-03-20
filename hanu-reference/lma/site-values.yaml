@@ -59,6 +59,8 @@ charts:
 - name: eck-resource
   override:
     kibana.nodeSelector: $(nodeSelector)
+    kibana.server.basePath: /kibana
+    kibana.readinessPath: /kibana/login
     
     elasticsearch.nodeSets.master.nodeSelector: $(nodeSelector)
     elasticsearch.nodeSets.master.count: 1
