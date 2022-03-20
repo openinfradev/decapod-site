@@ -14,6 +14,11 @@ global:
   defaultUser: taco
   thanosObjstoreSecret: taco-objstore-secret
   thanosPrimaryCluster: false
+  # servicemesh dashboard and grafana
+  realms: 04a70f29
+  serviceDomain: taco-cat.xyz
+  keycloakDomain: keycloak-eom.taco-cat.xyz
+  grafanaClientSecret: JLtsanYtrCg21RGxrcVmQP0GeuDFUhpA
 
 charts:
 - name: prometheus-operator
@@ -79,6 +84,33 @@ charts:
     adminPassword: password
     persistence.storageClassName: $(storageClassName)
     sidecar.dashboards.searchNamespace: ALL
+    # grafana oidc
+    service.type: ClusterIP
+    grafana.ini.server:
+      domain: dashboard-$(realms).$(serviceDomain)
+      root_url: https://dashboard-$(realms).$(serviceDomain)/grafana
+      serve_from_sub_path: true
+    grafana.ini.auth.generic_oauth:
+      enabled: true
+      name: keycloak
+      allow_sign_up: true
+      client_id: grafana
+      client_secret: $(grafanaClientSecret)
+      scopes: openid profile email
+      auth_url: https://$(keycloakDomain)/auth/realms/$(realms)/protocol/openid-connect/auth
+      token_url: https://$(keycloakDomain)/auth/realms/$(realms)/protocol/openid-connect/token
+      api_url: https://$(keycloakDomain)/auth/realms/$(realms)/protocol/openid-connect/userinfo
+    grafana.ini.auth:
+      disable_login_form: false
+      oauth_auto_login: true
+      disable_signout_menu: true
+    grafana.ini.security:
+      allow_embedding: true
+      cookie_secure: true
+      cookie_samesite: none
+    grafana.ini.user:
+      auto_assign_org: true
+      auto_assign_org_role: Admin
 
 - name: fluentbit-operator
   override:
