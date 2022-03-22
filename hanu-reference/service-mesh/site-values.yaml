@@ -44,6 +44,7 @@ charts:
         enabled: false
         username: taco-jaeger
         password: tacoword
+    query.basePath: /jaeger
 
 - name: kiali-operator
   override: {}
@@ -58,7 +59,7 @@ charts:
     externalServices.grafana.auth.password: password
     externalServices.grafana.inClusterUrl: http://grafana.lma.svc:80
     externalServices.grafana.url: https://grafana-v2.taco-cat.xyz
-
+    server.webRoot: /kiali
 - name: servicemesh-portal
   override:
     namespace: istio-system
