@@ -22,11 +22,17 @@ jobs:
       # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
       - uses: actions/checkout@v2
 
+      - name: Get branch name
+        id: branch-name
+        uses: tj-actions/branch-names@v5.2
+
       - name: Run render-cd.sh
         run: |
           set -xe
           chmod +x .github/workflows/render-cd.sh
           .github/workflows/render-cd.sh
+
+          echo "current branch: ${{ steps.branch-name.outputs.current_branch }}"
 
       - name: Pushes to the repository for argocd
         uses: cpina/github-action-push-to-another-repository@v1.3
@@ -38,4 +44,4 @@ jobs:
           destination-repository-name: 'decapod-manifests'
           user-email: 'taco_support@sk.com'
           commit-message: See ORIGIN_COMMIT
-          target-branch: main
+          target-branch: ${{ steps.branch-name.outputs.current_branch }}
