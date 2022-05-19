@@ -32,7 +32,7 @@ charts:
     prometheus.prometheusSpec.storageSpec.volumeClaimTemplate.spec.storageClassName: $(storageClassName)
     prometheus.prometheusSpec.storageSpec.volumeClaimTemplate.spec.resources.requests.storage: 20Gi
     prometheus.prometheusSpec.retention: 2d
-    prometheus.prometheusSpec.externalLabels.taco_cluster: dev
+    prometheus.prometheusSpec.externalLabels.taco_cluster: $(clusterName)
     prometheus.prometheusSpec.nodeSelector: $(nodeSelector)
     
     alertmanager.service.type: NodePort
