@@ -43,38 +43,56 @@ fi
 
 mkdir $outputdir
 
-for i in ${site_list}
+for site in ${site_list}
 do
-  echo "[render-cd] Starting build manifests for '$i' site"
+  echo "[render-cd] Starting build manifests for '$site' site"
 
-  for app in `ls $i/`
+  for app in `ls $site/`
   do
-    output="decapod-base-yaml/$app/$i/$app-manifest.yaml"
-    mkdir decapod-base-yaml/$app/$i
-    cp -r $i/$app/*.yaml decapod-base-yaml/$app/$i/
+    # helm-release file name rendered on 1st phase
+    hr_file="decapod-base-yaml/$app/$site/$app-manifest.yaml"
+    mkdir decapod-base-yaml/$app/$site
+    cp -r $site/$app/*.yaml decapod-base-yaml/$app/$site/
 
-    echo "Rendering $app-manifest.yaml for $i site"
-    docker run --rm -i -v $(pwd)/decapod-base-yaml/$app:/$app --name kustomize-build ${DOCKER_IMAGE_REPO}/sktdev/decapod-kustomize:latest kustomize build --enable_alpha_plugins /$app/$i -o /$app/$i/$app-manifest.yaml
+    echo "Rendering $app-manifest.yaml for $site site"
+    docker run --rm -i -v $(pwd)/decapod-base-yaml/$app:/$app --name kustomize-build ${DOCKER_IMAGE_REPO}/sktdev/decapod-kustomize:latest kustomize build --enable_alpha_plugins /$app/$site -o /$app/$site/$app-manifest.yaml
     build_result=$?
 
     if [ $build_result != 0 ]; then
       exit $build_result
     fi
 
-    if [ -f "$output" ]; then
-      echo "[render-cd] [$i, $app] Successfully Generate Helm-Release Files!"
+    if [ -f "$hr_file" ]; then
+      echo "[render-cd] [$site, $app] Successfully Generate Helm-Release Files!"
     else
-      echo "[render-cd] [$i, $app] Failed to render $app-manifest.yaml"
-      rm -rf $i/base decapod-yaml
+      echo "[render-cd] [$site, $app] Failed to render $app-manifest.yaml"
       exit 1
     fi
 
-    # cat $output
-    docker run --rm -i --net=host -v $(pwd)/decapod-base-yaml:/decapod-base-yaml -v $(pwd)/$outputdir:/cd --name generate ${DOCKER_IMAGE_REPO}/sktcloud/helmrelease2yaml:v1.5.0 -m $output -t -o /cd/$i/$app
-    rm $output
+    docker run --rm -i --net=host -v $(pwd)/decapod-base-yaml:/decapod-base-yaml -v $(pwd)/$outputdir:/out --name generate ${DOCKER_IMAGE_REPO}/sktcloud/helmrelease2yaml:v1.5.0 -m $hr_file -t -o /out/$site/$app
+    rm $hr_file
 
-    rm -rf $i/base
   done
+
+  # Post processes for the customized action
+  #   Action1. change the namespace for aws-cluster-resouces from argo to cluster-name
+  echo "Almost finished: changing namespace for aws-cluster-resouces from argo to cluster-name.."
+  sudo sed -i "s/ namespace: argo/ namespace: $site/g" $(pwd)/$outputdir/$site/tks-cluster-aws/cluster-api-aws/*
+  sudo sed -i "s/ - argo/ - $site/g" $(pwd)/output/$site/tks-cluster-aws/cluster-api-aws/*
+  # It's possible besides of two above but very tricky!!
+  # sudo sed -i "s/ argo$/ $site/g" $(pwd)/output/$site/tks-cluster-aws/cluster-api-aws/*
+  echo "---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: $site
+  labels:
+    name: $site
+    # It bring the secret 'dacapod-argocd-config' using kubed
+    decapod-argocd-config: enabled
+" > Namespace_aws_rc.yaml
+  sudo mv Namespace_aws_rc.yaml $(pwd)/output/$site/tks-cluster-aws/cluster-api-aws/
+  # End of Post process
 done
 
 rm -rf decapod-base-yaml

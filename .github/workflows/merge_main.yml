@@ -35,6 +35,13 @@ jobs:
 
           echo "current branch: ${{ steps.branch-name.outputs.current_branch }}"
 
+      - name: Abstract the repository name from env.
+        uses: bhowell2/github-substring-action@v1.0.0
+        id: repository_name
+        with:
+          value: ${{github.repository}}-manifests
+          index_of_str: ${{ github.repository_owner }}/
+
       - name: Pushes to the repository for argocd
         uses: cpina/github-action-push-to-another-repository@v1.3
         env:
@@ -42,7 +49,7 @@ jobs:
         with:
           source-directory: 'output'
           destination-github-username: ${{ github.repository_owner }}
-          destination-repository-name: 'decapod-manifests'
+          destination-repository-name: ${{ steps.repository_name.outputs.substring }}
           user-email: 'taco_support@sk.com'
           commit-message: See ORIGIN_COMMIT
           target-branch: ${{ steps.branch-name.outputs.current_branch }}
