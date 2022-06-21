@@ -24,6 +24,10 @@ charts:
         annotations:
           service.beta.kubernetes.io/aws-load-balancer-type: "nlb"
         externalTrafficPolicy: Local
+        annotations:
+          service.beta.kubernetes.io/aws-load-balancer-name: "taco-ingress-nlb"
+          service.beta.kubernetes.io/aws-load-balancer-type: "nlb"
+          service.beta.kubernetes.io/aws-load-balancer-proxy-protocol: "*"
         type: LoadBalancer
       config:
         enable-underscores-in-headers: "true"
