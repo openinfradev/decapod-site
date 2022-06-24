@@ -6,7 +6,7 @@ GITHUB_IMAGE_REPO="ghcr.io"
 outputdir="output"
 
 rm -rf decapod-base-yaml
-site_list=$(ls -d */ | sed 's/\///g' | grep -v 'docs' | grep -v 'output' | grep -v 'offline')
+site_list=$(ls -d */ | sed 's/\///g' | grep -v 'docs' | grep -v $outputdir | grep -v 'offline')
 
 function usage {
         echo -e "\nUsage: $0 [--site TARGET_SITE] [--base_url DECAPOD_BASE_URL] [--registry REGISTRY_URL]"
@@ -75,12 +75,14 @@ do
   done
 
   # Post processes for the customized action
-  #   Action1. change the namespace for aws-cluster-resouces from argo to cluster-name
-  echo "Almost finished: changing namespace for aws-cluster-resouces from argo to cluster-name.."
+  #   Action1. change the namespace for cluster-resouces from argo to cluster-name
+  echo "Almost finished: changing namespace for cluster-resouces from argo to cluster-name.."
   sudo sed -i "s/ namespace: argo/ namespace: $site/g" $(pwd)/$outputdir/$site/tks-cluster-aws/cluster-api-aws/*
-  sudo sed -i "s/ - argo/ - $site/g" $(pwd)/output/$site/tks-cluster-aws/cluster-api-aws/*
+  sudo sed -i "s/ - argo/ - $site/g" $(pwd)/$outputdir/$site/tks-cluster-aws/cluster-api-aws/*
+  sudo sed -i "s/ namespace: argo/ namespace: $site/g" $(pwd)/$outputdir/$site/tks-cluster-byoh/cluster-api-byoh/*
+  sudo sed -i "s/ - argo/ - $site/g" $(pwd)/$outputdir/$site/tks-cluster-byoh/cluster-api-byoh/*
   # It's possible besides of two above but very tricky!!
-  # sudo sed -i "s/ argo$/ $site/g" $(pwd)/output/$site/tks-cluster-aws/cluster-api-aws/*
+  # sudo sed -i "s/ argo$/ $site/g" $(pwd)/$outputdir/$site/tks-cluster-aws/cluster-api-aws/*
   echo "---
 apiVersion: v1
 kind: Namespace
@@ -91,7 +93,8 @@ metadata:
     # It bring the secret 'dacapod-argocd-config' using kubed
     decapod-argocd-config: enabled
 " > Namespace_aws_rc.yaml
-  sudo mv Namespace_aws_rc.yaml $(pwd)/output/$site/tks-cluster-aws/cluster-api-aws/
+  sudo cp Namespace_aws_rc.yaml $(pwd)/$outputdir/$site/tks-cluster-aws/cluster-api-aws/
+  sudo cp Namespace_aws_rc.yaml $(pwd)/$outputdir/$site/tks-cluster-byoh/cluster-api-byoh/
   # End of Post process
 done
 
