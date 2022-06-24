@@ -1,0 +1,235 @@
+apiVersion: openinfradev.github.com/v1
+kind: HelmValuesTransformer
+metadata:
+  name: site
+
+global:
+  nodeSelector:
+    taco-lma: enabled
+  clusterName: cluster.local
+  storageClassName: taco-storage
+  repository: https://openinfradev.github.io/helm-repo/
+  serviceScrapeInterval: 30s
+  defaultPassword: password
+  defaultUser: taco
+  thanosObjstoreSecret: taco-objstore-secret
+  thanosPrimaryCluster: false
+  # servicemesh dashboard and grafana
+  realms: 04a70f29
+  serviceDomain: taco-cat.xyz
+  keycloakDomain: keycloak-eom.taco-cat.xyz
+  grafanaClientSecret: JLtsanYtrCg21RGxrcVmQP0GeuDFUhpA
+
+charts:
+- name: prometheus-operator
+  override:
+    prometheusOperator.nodeSelector: $(nodeSelector)
+
+- name: eck-operator
+
+- name: prometheus
+  override:
+    prometheus.prometheusSpec.storageSpec.volumeClaimTemplate.spec.storageClassName: $(storageClassName)
+    prometheus.prometheusSpec.storageSpec.volumeClaimTemplate.spec.resources.requests.storage: 20Gi
+    prometheus.prometheusSpec.retention: 2d
+    prometheus.prometheusSpec.externalLabels.taco_cluster: $(clusterName)
+    prometheus.prometheusSpec.nodeSelector: $(nodeSelector)
+    
+    alertmanager.service.type: NodePort
+    alertmanager.service.nodePort: 30111
+    alertmanager.alertmanagerSpec.alertmanagerConfigSelector.matchLabels.alertmanagerConfig: example
+    alertmanager.alertmanagerSpec.nodeSelector: $(nodeSelector)
+    alertmanager.alertmanagerSpec.retention: 2h
+    alertmanager.config.global.slack_api_url: https://hooks.slack.com/services/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
+
+- name: prometheus-node-exporter  
+  override:
+    hostNetwork: false
+
+- name: kube-state-metrics
+  override:
+    nodeSelector: $(nodeSelector)
+
+- name: prometheus-pushgateway
+  override:
+    nodeSelector: $(nodeSelector)
+
+- name: prometheus-process-exporter
+  override:
+    conf.processes: dockerd,kubelet,kube-proxy,ntpd,node
+    pod.hostNetwork: false
+
+- name: eck-resource
+  override:
+    kibana.nodeSelector: $(nodeSelector)
+    kibana.server.basePath: /kibana
+    kibana.readinessPath: /kibana/login
+    
+    elasticsearch.nodeSets.master.nodeSelector: $(nodeSelector)
+    elasticsearch.nodeSets.master.count: 1
+    elasticsearch.nodeSets.master.javaOpts: "-Xms1g -Xmx1g"
+    elasticsearch.nodeSets.master.limitCpu: 2
+    elasticsearch.nodeSets.master.limitMem: 4Gi
+    elasticsearch.nodeSets.master.pvc.storageClassName: $(storageClassName)
+    elasticsearch.nodeSets.master.pvc.size: 1Gi
+
+    elasticsearch.nodeSets.hotdata.nodeSelector: $(nodeSelector)
+    elasticsearch.nodeSets.hotdata.count: 1
+    elasticsearch.nodeSets.hotdata.javaOpts: "-Xms1g -Xmx1g"
+    elasticsearch.nodeSets.hotdata.limitCpu: 2
+    elasticsearch.nodeSets.hotdata.limitMem: 2Gi
+    elasticsearch.nodeSets.hotdata.pvc.storageClassName: $(storageClassName)
+    elasticsearch.nodeSets.hotdata.pvc.size: 10Gi
+
+    elasticsearch.nodeSets.client.enabled: false
+
+
+- name: grafana
+  override:
+    adminPassword: password
+    persistence.storageClassName: $(storageClassName)
+    sidecar.dashboards.searchNamespace: ALL
+    # grafana oidc
+    service.type: ClusterIP
+    grafana.ini.server:
+      domain: dashboard-$(realms).$(serviceDomain)
+      root_url: https://dashboard-$(realms).$(serviceDomain)/grafana
+      serve_from_sub_path: true
+    grafana.ini.auth.generic_oauth:
+      enabled: true
+      name: keycloak
+      allow_sign_up: true
+      client_id: grafana
+      client_secret: $(grafanaClientSecret)
+      scopes: openid profile email
+      auth_url: https://$(keycloakDomain)/auth/realms/$(realms)/protocol/openid-connect/auth
+      token_url: https://$(keycloakDomain)/auth/realms/$(realms)/protocol/openid-connect/token
+      api_url: https://$(keycloakDomain)/auth/realms/$(realms)/protocol/openid-connect/userinfo
+    grafana.ini.auth:
+      disable_login_form: false
+      oauth_auto_login: true
+      disable_signout_menu: true
+    grafana.ini.security:
+      allow_embedding: true
+      cookie_secure: true
+      cookie_samesite: none
+    grafana.ini.user:
+      auto_assign_org: true
+      auto_assign_org_role: Admin
+
+- name: fluentbit-operator
+  override:
+    global.base_cluster_url: $(clusterName)
+    fluentbitOperator.nodeSelector: $(nodeSelector)
+    logExporter.nodeSelector: $(nodeSelector)
+
+- name: fluentbit
+  override:
+    global.base_cluster_url: $(clusterName)
+    global.nodeSelector: $(nodeSelector)
+    fluentbit.clusterName: $(clusterName)
+    fluentbit.outputs.es.host: eck-elasticsearch-es-http.lma.svc.$(clusterName)
+    fluentbit.outputs.kafka:
+      enabled: false
+    fluentbit.nodeSelector: $(nodeSelector)
+    fluentbit.targetLogs:
+       - bufferChunkSize: 2M
+         bufferMaxSize: 5M
+         do_not_store_as_default: true
+         index: container
+         memBufLimit: 20MB
+         multi_index:
+         - index: platform
+           key: $kubernetes['namespace_name']
+           value: kube-system|lma|fed|argo|openstack|istio-system|istio-services|trident|registry
+         name: dockerlog
+         parser: docker
+         path: /var/log/containers/*.log
+         tag: kube.*
+         type: fluent
+       - index: syslog
+         name: syslog
+         parser: syslog-rfc5424
+         path: /var/log/syslog
+         tag: syslog.*
+         type: syslog
+
+- name: addons
+  override:
+    SPECIAL_VALUE: SPECIAL
+    serviceMonitor.trident:
+      enabled: false
+      interval: $(serviceScrapeInterval)
+    serviceMonitor.kubelet.interval: 30s
+    serviceMonitor.additionalScrapeConfigs:
+    metricbeat.enabled: false
+    kibanaInit.url: http://eck-kibana-dashboard-kb-http.lma.svc.$(clusterName):5601
+    grafanaDashboard.istio.enabled: false
+    grafanaDashboard.jaeger.enabled: false
+    serviceMonitor.istio.enabled: false
+    serviceMonitor.jaeger.enabled: false
+    prometheusRules.istio.aggregation.enabled: false
+    prometheusRules.istio.optimization.enabled: false
+
+- name: prometheus-adapter
+  override:
+    nodeSelector: $(nodeSelector)
+
+- name: kubernetes-event-exporter
+  override:
+    conf.default.hosts:
+    - "https://eck-elasticsearch-es-http.lma.svc.$(clusterName):9200"
+
+- name: thanos
+  override:
+    global.storageClass: $(storageClassName)
+    clusterDomain: $(clusterName)
+    existingObjstoreSecret: $(thanosObjstoreSecret)
+    query.nodeSelector: $(nodeSelector)
+    queryFrontend.nodeSelector: $(nodeSelector)
+    queryFrontend.service.type: NodePort
+    queryFrontend.service.http.nodePort: 30007
+    querier.stores:
+    - prometheus-operated.lma.svc.$(clusterName):10901
+    bucketweb.enabled: $(thanosPrimaryCluster)
+    bucketweb.nodeSelector: $(nodeSelector)
+    compactor.enabled: $(thanosPrimaryCluster)
+    compactor.nodeSelector: $(nodeSelector)
+    storegateway.nodeSelector: $(nodeSelector)
+    compactor.persistence.size: 8Gi
+    # compactor.extraFlags:
+    # - --compact.enable-vertical-compaction
+    # - --deduplication.replica-label="replica"
+    storegateway.persistence.size: 8Gi
+    ruler.enabled: $(thanosPrimaryCluster)
+    ruler.nodeSelector: $(nodeSelector)
+    ruler.alertmanagers:
+    - http://fed-master-alertmanager.lma.svc.$(clusterName):9093
+    ruler.persistence.size: 8Gi
+    minio.accessKey.password: $(defaultUser)
+    minio.secretKey.password: $(defaultPassword)
+    minio.defaultBuckets: thanos
+    minio.persistence.storageClass: $(storageClassName)
+    minio.persistence.accessMode: ReadWriteOnce
+    minio.persistence.size: 10Gi
+
+- name: thanos-config
+  override:
+    objectStorage:
+      bucketName: thanos
+      endpoint: thanos-minio.lma.svc.$(clusterName):9000
+      access_key: $(defaultUser)
+      secret_key: $(defaultPassword)
+      secretName: $(thanosObjstoreSecret)
+    sidecarsService.name: thanos-sidecars
+    sidecarsService.endpoints:
+      - 192.168.97.102 # should not be in the loopback range (127.0.0.0/8)
+
+- name: prepare-etcd-secret
+  override:
+    nodeSelector:
+      "node-role.kubernetes.io/master": ""
+    tolerations:
+      - key: "node-role.kubernetes.io/master"
+        effect: "NoSchedule"
+        operator: "Exists"
