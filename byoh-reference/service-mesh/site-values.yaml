@@ -1,0 +1,62 @@
+apiVersion: openinfradev.github.com/v1
+kind: HelmValuesTransformer
+metadata:
+  name: site
+
+global:
+  clusterName: cluster.local
+  serviceMeshControlNodeSelector:
+    servicemesh: enabled
+  serviceMeshIngressNodeSelector:
+    taco-ingress-gateway: enabled
+  serviceMeshEgressNodeSelector:
+    taco-egress-gateway: enabled
+  ingressGatewayLabel: istio-ingress-gateway
+  egressGatewayLabel: istio-egress-gateway
+
+charts:
+- name: istiod
+  override:
+    pilot.traceSampling: 1.0
+
+- name: istio-ingress-gateway
+  override:
+    replicaCount: 1
+    service.type: LoadBalancer
+    resources.requests.cpu: 1000m
+    resources.requests.memory: 1024Mi
+    resources.limits.cpu: 2000m
+    resources.limits.memory: 2048Mi
+
+- name: jaeger-operator
+  override: {}
+
+- name: servicemesh-jaeger-resource
+  override:
+    sampling.param: 100
+    storage.options.es:
+      serverUrls: https://eck-elasticsearch-es-http.lma.svc:9200
+      username: taco-fluentbit
+      password: tacoword
+    elasticsearch:
+      host: eck-elasticsearch-es-http.lma.svc.$(clusterName)
+      user:
+        enabled: false
+        username: taco-jaeger
+        password: tacoword
+    query.basePath: /jaeger
+
+- name: kiali-operator
+  override: {}
+
+- name: servicemesh-kiali-resource
+  override:
+    auth.strategy: anonymous
+    externalServices.prometheus.url: http://lma-prometheus.lma.svc:9090
+    externalServices.tracing.inClusterUrl: http://jaeger-operator-jaeger-query.istio-system:16686
+    externalServices.grafana.auth.type: basic
+    externalServices.grafana.auth.username: admin
+    externalServices.grafana.auth.password: password
+    externalServices.grafana.inClusterUrl: http://grafana.lma.svc:80
+    externalServices.grafana.url: https://grafana-v2.taco-cat.xyz
+    server.webRoot: /kiali

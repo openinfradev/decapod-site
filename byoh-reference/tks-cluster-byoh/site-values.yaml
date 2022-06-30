@@ -1,0 +1,31 @@
+apiVersion: openinfradev.github.com/v1
+kind: HelmValuesTransformer
+metadata:
+  name: site
+
+global:
+  # These values are replaced on cluster creation by workflow
+  clusterName: cluster.local
+charts:
+- name: cluster-api-byoh
+  override:
+    cluster.name: $(clusterName)
+    machineDeployment:
+    - name: taco
+      replicas: 1
+      selector:
+        matchLabels:
+          role: tks
+      labels:
+        servicemesh: enabled
+        taco-egress-gateway: enabled
+        taco-ingress-gateway: enabled
+        taco-lma: enabled
+    - name: normal
+      replicas: 1
+      autoscaling:
+        minSize: 1
+        maxSize: 5
+      selector:
+        matchLabels:
+          role: worker
