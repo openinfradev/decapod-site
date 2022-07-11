@@ -92,9 +92,9 @@ metadata:
     name: $site
     # It bring the secret 'dacapod-argocd-config' using kubed
     decapod-argocd-config: enabled
-" > Namespace_aws_rc.yaml
-  sudo cp Namespace_aws_rc.yaml $(pwd)/$outputdir/$site/tks-cluster-aws/cluster-api-aws/
-  sudo cp Namespace_aws_rc.yaml $(pwd)/$outputdir/$site/tks-cluster-byoh/cluster-api-byoh/
+" > Namespace_rc.yaml
+  sudo cp Namespace_rc.yaml $(pwd)/$outputdir/$site/tks-cluster-aws/cluster-api-aws/
+  sudo cp Namespace_rc.yaml $(pwd)/$outputdir/$site/tks-cluster-byoh/cluster-api-byoh/
   # End of Post process
 done
 
