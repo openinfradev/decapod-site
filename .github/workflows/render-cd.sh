@@ -76,21 +76,20 @@ do
 
   # Post processes for the customized action
   #   Action1. change the namespace for cluster-resouces from argo to cluster-name
-  site_prefix=${site%%-*}
   echo "Almost finished: changing namespace for cluster-resouces from argo to cluster-name.."
-  sudo sed -i "s/ namespace: argo/ namespace: $site_prefix/g" $(pwd)/$outputdir/$site/tks-cluster-aws/cluster-api-aws/*
-  sudo sed -i "s/ - argo/ - $site_prefix/g" $(pwd)/$outputdir/$site/tks-cluster-aws/cluster-api-aws/*
-  sudo sed -i "s/ namespace: argo/ namespace: $site_prefix/g" $(pwd)/$outputdir/$site/tks-cluster-byoh/cluster-api-byoh/*
-  sudo sed -i "s/ - argo/ - $site_prefix/g" $(pwd)/$outputdir/$site/tks-cluster-byoh/cluster-api-byoh/*
+  sudo sed -i "s/ namespace: argo/ namespace: $site/g" $(pwd)/$outputdir/$site/tks-cluster-aws/cluster-api-aws/*
+  sudo sed -i "s/ - argo/ - $site/g" $(pwd)/$outputdir/$site/tks-cluster-aws/cluster-api-aws/*
+  sudo sed -i "s/ namespace: argo/ namespace: $site/g" $(pwd)/$outputdir/$site/tks-cluster-byoh/cluster-api-byoh/*
+  sudo sed -i "s/ - argo/ - $site/g" $(pwd)/$outputdir/$site/tks-cluster-byoh/cluster-api-byoh/*
   # It's possible besides of two above but very tricky!!
-  # sudo sed -i "s/ argo$/ $site_prefix/g" $(pwd)/$outputdir/$site/tks-cluster-aws/cluster-api-aws/*
+  # sudo sed -i "s/ argo$/ $site/g" $(pwd)/$outputdir/$site/tks-cluster-aws/cluster-api-aws/*
   echo "---
 apiVersion: v1
 kind: Namespace
 metadata:
-  name: $site_prefix
+  name: $site
   labels:
-    name: $site_prefix
+    name: $site
     # It bring the secret 'dacapod-argocd-config' using kubed
     decapod-argocd-config: enabled
 " > Namespace_rc.yaml
