@@ -113,10 +113,9 @@ charts:
     global.base_cluster_url: $(clusterName)
     global.nodeSelector: $(nodeSelector)
     fluentbit.clusterName: $(clusterName)
-    fluentbit.outputs.es.host: eck-elasticsearch-es-http.lma.svc.$(clusterName)
+    fluentbit.outputs.es[1].host: eck-elasticsearch-es-http.lma.svc.$(clusterName)
     fluentbit.outputs.kafka:
       enabled: false
-    fluentbit.esTemplate.url: https://eck-elasticsearch-es-http.lma.svc.$(clusterName):9200
     fluentbit.nodeSelector: $(nodeSelector)
     fluentbit.targetLogs:
        - bufferChunkSize: 2M
