@@ -55,7 +55,7 @@ do
     cp -r $site/$app/*.yaml decapod-base-yaml/$app/$site/
 
     echo "Rendering $app-manifest.yaml for $site site"
-    docker run --rm -i -v $(pwd)/decapod-base-yaml/$app:/$app --name kustomize-build ${DOCKER_IMAGE_REPO}/sktdev/decapod-kustomize:latest kustomize build --enable_alpha_plugins /$app/$site -o /$app/$site/$app-manifest.yaml
+    docker run --rm -i -v $(pwd)/decapod-base-yaml/$app:/$app --name kustomize-build ${DOCKER_IMAGE_REPO}/sktcloud/decapod-render:v2.0.0  kustomize build --enable-alpha-plugins /${app}/${site} -o /$app/$site/$app-manifest.yaml
     build_result=$?
 
     if [ $build_result != 0 ]; then
@@ -69,7 +69,7 @@ do
       exit 1
     fi
 
-    docker run --rm -i --net=host -v $(pwd)/decapod-base-yaml:/decapod-base-yaml -v $(pwd)/$outputdir:/out --name generate ${DOCKER_IMAGE_REPO}/sktcloud/helmrelease2yaml:v1.5.0 -m $hr_file -t -o /out/$site/$app
+    docker run --rm -i --net=host -v $(pwd)/decapod-base-yaml:/decapod-base-yaml -v $(pwd)/$outputdir:/out --name generate ${DOCKER_IMAGE_REPO}/sktcloud/decapod-render:v2.0.0 helm2yaml/helm2yaml -m /$hr_file -t -o /out/$site/$app
     rm $hr_file
 
   done

@@ -128,31 +128,7 @@ charts:
     global.base_cluster_url: $(clusterName)
     global.nodeSelector: $(nodeSelector)
     fluentbit.clusterName: $(clusterName)
-    fluentbit.outputs.es.host: eck-elasticsearch-es-http.lma.svc.$(clusterName)
-    fluentbit.outputs.kafka:
-      enabled: false
     fluentbit.nodeSelector: $(nodeSelector)
-    fluentbit.targetLogs:
-       - bufferChunkSize: 2M
-         bufferMaxSize: 5M
-         do_not_store_as_default: true
-         index: container
-         memBufLimit: 20MB
-         multi_index:
-         - index: platform
-           key: $kubernetes['namespace_name']
-           value: kube-system|lma|fed|argo|openstack|istio-system|istio-services|trident|registry
-         name: dockerlog
-         parser: docker
-         path: /var/log/containers/*.log
-         tag: kube.*
-         type: fluent
-       - index: syslog
-         name: syslog
-         parser: syslog-rfc5424
-         path: /var/log/syslog
-         tag: syslog.*
-         type: syslog
 
 - name: addons
   override:
