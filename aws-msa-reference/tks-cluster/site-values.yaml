@@ -1,0 +1,82 @@
+apiVersion: openinfradev.github.com/v1
+kind: HelmValuesTransformer
+metadata:
+  name: site
+
+global:
+  # These values are replaced on cluster creation by workflow
+  clusterName: cluster.local
+  sshKeyName: CHANGEME
+  clusterRegion: CHANGEME
+  mdNumOfAz: CHANGEME
+  mdMinSizePerAz: CHANGEME
+  mdMaxSizePerAz: CHANGEME
+  mdMachineType: CHANGEME
+charts:
+- name: cluster-api-aws
+  override:
+    sshKeyName: $(sshKeyName)
+    cluster.name: $(clusterName)
+    cluster.region: $(clusterRegion)
+    cluster.bastion.enabled: true
+    machinePool:
+    - name: taco
+      machineType: t3.2xlarge
+      replicas: 3
+      minSize: 1
+      maxSize: 16
+      rootVolume:
+        size: 200
+        type: gp2
+      labels:
+        taco-lma: enabled
+        servicemesh: enabled
+        taco-ingress-gateway: enabled
+    machineDeployment:
+    - name: normal
+      numberOfAZ: $(mdNumOfAz)
+      minSizePerAZ: $(mdMinSizePerAz)
+      maxSizePerAZ: $(mdMaxSizePerAz)
+      selector:
+        matchLabels:
+      machineType: $(mdMachineType)
+      rootVolume:
+        size: 50
+        type: gp2
+
+- name: aws-ebs-csi-driver
+  override:
+
+- name: kubernetes-addons
+  override:
+    cni.calico.enabled: true
+
+- name: ingress-nginx
+  override:
+    controller:
+      nodeSelector:
+        taco-lma: enabled
+      resources:
+        requests:
+          cpu: 2000m
+          memory: 4Gi
+      service:
+        externalTrafficPolicy: Local
+        annotations:
+          service.beta.kubernetes.io/aws-load-balancer-name: "taco-ingress-nlb"
+          service.beta.kubernetes.io/aws-load-balancer-type: "nlb"
+          service.beta.kubernetes.io/aws-load-balancer-proxy-protocol: "*"
+        type: LoadBalancer
+      config:
+        enable-underscores-in-headers: "true"
+        proxy-body-size: "10m"
+
+- name: cluster-autoscaler
+  override:
+    discoveryNamespace: $(clusterName)
+    discoveryClusterName: $(clusterName)
+
+- name: cluster-autoscaler-rbac
+  override:
+    deployMgmtRbacOnly:
+      targetNamespace: $(clusterName)
