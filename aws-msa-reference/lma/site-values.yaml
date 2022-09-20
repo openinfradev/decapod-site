@@ -259,8 +259,17 @@ charts:
 
 - name: kubernetes-event-exporter
   override:
-    conf.default.hosts:
-    - "https://eck-elasticsearch-es-http.lma.svc.$(clusterName):9200"
+    conf.recievers:
+    - name: default
+      type: elasticsearch
+      config:
+        hosts:
+        - "https://eck-elasticsearch-es-http.lma.svc.siim-dev:9200"
+        index: kube-events
+        username: elastic
+        password: tacoword
+        tls: # optional, advanced options for tls
+          insecureSkipVerify: true
 
 - name: thanos
   override:

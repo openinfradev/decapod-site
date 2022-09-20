@@ -25,8 +25,6 @@ charts:
   override:
     prometheusOperator.nodeSelector: $(nodeSelector)
 
-- name: eck-operator
-
 - name: prometheus
   override:
     prometheus.prometheusSpec.storageSpec.volumeClaimTemplate.spec.storageClassName: $(storageClassName)
@@ -58,31 +56,6 @@ charts:
   override:
     conf.processes: dockerd,kubelet,kube-proxy,ntpd,node
     pod.hostNetwork: false
-
-- name: eck-resource
-  override:
-    kibana.nodeSelector: $(nodeSelector)
-    kibana.server.basePath: /kibana
-    kibana.readinessPath: /kibana/login
-    
-    elasticsearch.nodeSets.master.nodeSelector: $(nodeSelector)
-    elasticsearch.nodeSets.master.count: 1
-    elasticsearch.nodeSets.master.javaOpts: "-Xms1g -Xmx1g"
-    elasticsearch.nodeSets.master.limitCpu: 2
-    elasticsearch.nodeSets.master.limitMem: 4Gi
-    elasticsearch.nodeSets.master.pvc.storageClassName: $(storageClassName)
-    elasticsearch.nodeSets.master.pvc.size: 1Gi
-
-    elasticsearch.nodeSets.hotdata.nodeSelector: $(nodeSelector)
-    elasticsearch.nodeSets.hotdata.count: 1
-    elasticsearch.nodeSets.hotdata.javaOpts: "-Xms1g -Xmx1g"
-    elasticsearch.nodeSets.hotdata.limitCpu: 2
-    elasticsearch.nodeSets.hotdata.limitMem: 2Gi
-    elasticsearch.nodeSets.hotdata.pvc.storageClassName: $(storageClassName)
-    elasticsearch.nodeSets.hotdata.pvc.size: 10Gi
-
-    elasticsearch.nodeSets.client.enabled: false
-
 
 - name: grafana
   override:
@@ -161,8 +134,6 @@ charts:
       interval: $(serviceScrapeInterval)
     serviceMonitor.kubelet.interval: 30s
     serviceMonitor.additionalScrapeConfigs:
-    metricbeat.enabled: false
-    kibanaInit.url: http://eck-kibana-dashboard-kb-http.lma.svc.$(clusterName):5601
     grafanaDashboard.istio.enabled: false
     grafanaDashboard.jaeger.enabled: false
     serviceMonitor.istio.enabled: false
@@ -176,6 +147,19 @@ charts:
 
 - name: kubernetes-event-exporter
   override:
+    conf.recievers:
+      - name: loki
+        type: file
+        config:
+          path: "/tmp/kubernetes-event.log"
+    addons:
+      loki: 
+        enabled: true
+        host: loki
+        port: 3100      
+        target_file: "/tmp/kubernetes-event.log"
+
+
     conf.default.hosts:
     - "https://eck-elasticsearch-es-http.lma.svc.$(clusterName):9200"
 
