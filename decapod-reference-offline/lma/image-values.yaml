@@ -37,12 +37,12 @@ charts:
     image.hyperkube.tag: v1.17.6
     image.init.repository: $(registry)/library/docker
     image.init.tag: 19.03
-    image.operator.repository: $(registry)/siim/fluentbit-operator
+    image.operator.repository: $(registry)/siim/fluent-operator
     image.operator.tag: v0.1.1
     image.elasticsearchTemplates.repository: $(registry)/openstackhelm/heat
     image.elasticsearchTemplates.tag: newton
 
-- name: fluentbit-operator
+- name: fluent-operator
   override:
     image.exporter.repository: $(registry)/siim/logalert-exporter
     image.exporter.tag: v0.1.1
@@ -52,7 +52,7 @@ charts:
     image.hyperkube.tag: v1.17.6
     image.init.repository: $(registry)/library/docker
     image.init.tag: 19.03
-    image.operator.repository: $(registry)/siim/fluentbit-operator
+    image.operator.repository: $(registry)/siim/fluent-operator
     image.operator.tag: v0.1.1
     image.elasticsearchTemplates.repository: $(registry)/openstackhelm/heat
     image.elasticsearchTemplates.tag: newton

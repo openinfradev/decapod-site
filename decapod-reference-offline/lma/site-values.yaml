@@ -98,7 +98,7 @@ charts:
     persistence.storageClassName: $(storageClassName)
     sidecar.dashboards.searchNamespace: ALL
 
-- name: fluentbit-operator
+- name: fluent-operator
   source:
     repository: $(repository)
   override:
