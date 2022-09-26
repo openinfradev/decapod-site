@@ -31,31 +31,19 @@ charts:
   override:
     image.exporter.repository: $(registry)/siim/logalert-exporter
     image.exporter.tag: v0.1.1
-    image.fluentbit.repository: $(registry)/siim/fluent-bit-for-operator
-    image.fluentbit.tag: v1.4.6
-    image.hyperkube.repository: $(registry)/hyperkube
-    image.hyperkube.tag: v1.17.6
-    image.init.repository: $(registry)/library/docker
-    image.init.tag: 19.03
-    image.operator.repository: $(registry)/siim/fluent-operator
-    image.operator.tag: v0.1.1
+    image.fluentbit.repository: $(registry)/openinfradev/fluentbit
+    image.fluentbit.tag: v1.9.9
     image.elasticsearchTemplates.repository: $(registry)/openstackhelm/heat
     image.elasticsearchTemplates.tag: newton
 
 - name: fluent-operator
   override:
-    image.exporter.repository: $(registry)/siim/logalert-exporter
-    image.exporter.tag: v0.1.1
-    image.fluentbit.repository: $(registry)/siim/fluent-bit-for-operator
-    image.fluentbit.tag: v1.4.6
-    image.hyperkube.repository: $(registry)/hyperkube
-    image.hyperkube.tag: v1.17.6
-    image.init.repository: $(registry)/library/docker
-    image.init.tag: 19.03
-    image.operator.repository: $(registry)/siim/fluent-operator
-    image.operator.tag: v0.1.1
-    image.elasticsearchTemplates.repository: $(registry)/openstackhelm/heat
-    image.elasticsearchTemplates.tag: newton
+    operator.initcontainer.repository: "$(registry)/docker"
+    operator.initcontainer.tag: "19.03"
+    operator.container.repository: "$(registry)/kubesphere/fluent-operator"
+    operator.container.tag: "v1.5.1"
+    fluentbit.image.repository: "$(registry)/kubesphere/fluent-bit"
+    fluentbit.image.tag: "v1.9.9"
 
 - name: grafana
   override:
