@@ -66,20 +66,20 @@ charts:
     kibana.readinessPath: /kibana/login
     
     elasticsearch.nodeSets.master.nodeSelector: $(nodeSelector)
-    elasticsearch.nodeSets.master.count: 1
-    elasticsearch.nodeSets.master.javaOpts: "-Xms1g -Xmx1g"
+    elasticsearch.nodeSets.master.count: 3
+    elasticsearch.nodeSets.master.javaOpts: "-Xms2g -Xmx2g"
     elasticsearch.nodeSets.master.limitCpu: 2
     elasticsearch.nodeSets.master.limitMem: 4Gi
     elasticsearch.nodeSets.master.pvc.storageClassName: $(storageClassName)
-    elasticsearch.nodeSets.master.pvc.size: 1Gi
+    elasticsearch.nodeSets.master.pvc.size: 10Gi
 
     elasticsearch.nodeSets.hotdata.nodeSelector: $(nodeSelector)
-    elasticsearch.nodeSets.hotdata.count: 1
-    elasticsearch.nodeSets.hotdata.javaOpts: "-Xms1g -Xmx1g"
+    elasticsearch.nodeSets.hotdata.count: 3
+    elasticsearch.nodeSets.hotdata.javaOpts: "-Xms2g -Xmx2g"
     elasticsearch.nodeSets.hotdata.limitCpu: 2
-    elasticsearch.nodeSets.hotdata.limitMem: 2Gi
+    elasticsearch.nodeSets.hotdata.limitMem: 4Gi
     elasticsearch.nodeSets.hotdata.pvc.storageClassName: $(storageClassName)
-    elasticsearch.nodeSets.hotdata.pvc.size: 10Gi
+    elasticsearch.nodeSets.hotdata.pvc.size: 500Gi
 
     elasticsearch.nodeSets.client.enabled: false
 
