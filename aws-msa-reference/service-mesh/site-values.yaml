@@ -37,7 +37,7 @@ charts:
     storage.options.es:
       serverUrls: https://eck-elasticsearch-es-http.lma.svc:9200
       username: taco-fluentbit
-      password: tacoword
+      password: password
     elasticsearch:
       host: eck-elasticsearch-es-http.lma.svc.$(clusterName)
       user:
