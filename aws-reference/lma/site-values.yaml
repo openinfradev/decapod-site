@@ -200,7 +200,7 @@ charts:
   override:
     objectStorage:
       bucketName: thanos
-      endpoint: thanos-minio.lma.svc.$(clusterName):9000
+      endpoint: minio.lma.svc.$(clusterName):9000
       access_key: $(defaultUser)
       secret_key: $(defaultPassword)
       secretName: $(thanosObjstoreSecret)
