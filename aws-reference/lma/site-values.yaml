@@ -158,8 +158,7 @@ charts:
         host: loki
         port: 3100      
         target_file: "/tmp/kubernetes-event.log"
-
-
+        
     conf.default.hosts:
     - "https://eck-elasticsearch-es-http.lma.svc.$(clusterName):9200"
 
