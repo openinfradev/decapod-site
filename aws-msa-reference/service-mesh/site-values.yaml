@@ -36,14 +36,14 @@ charts:
     sampling.param: 100
     storage.options.es:
       serverUrls: https://eck-elasticsearch-es-http.lma.svc:9200
-      username: taco-fluentbit
+      username: taco-jaeger
       password: password
     elasticsearch:
       host: eck-elasticsearch-es-http.lma.svc.$(clusterName)
       user:
-        enabled: false
+        enabled: true
         username: taco-jaeger
-        password: tacoword
+        password: password
     query.basePath: /jaeger
 
 - name: kiali-operator
