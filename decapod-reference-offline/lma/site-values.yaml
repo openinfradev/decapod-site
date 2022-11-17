@@ -21,6 +21,7 @@ charts:
     repository: $(repository)
   override:
     prometheusOperator.nodeSelector: $(nodeSelector)
+    prometheusOperator.admissionWebhooks.patch.image.sha: ""
 
 - name: eck-operator
   source:
