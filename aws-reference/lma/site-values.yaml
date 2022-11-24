@@ -64,7 +64,7 @@ charts:
     persistence.storageClassName: $(storageClassName)
     sidecar.dashboards.searchNamespace: ALL
     # grafana oidc
-    service.type: ClusterIP
+    service.type: LoadBalancer
     grafana.ini.server:
       domain: dashboard-$(realms).$(serviceDomain)
       root_url: https://dashboard-$(realms).$(serviceDomain)/grafana
