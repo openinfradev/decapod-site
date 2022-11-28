@@ -24,7 +24,7 @@ charts:
     machinePool:
     - name: taco
       machineType: t3.2xlarge
-      replicas: 1
+      replicas: 3
       minSize: 1
       maxSize: 16
       rootVolume:
