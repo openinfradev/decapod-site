@@ -18,12 +18,13 @@ charts:
     sshKeyName: $(sshKeyName)
     cluster.name: $(clusterName)
     cluster.region: $(clusterRegion)
-    cluster.bastion.enabled: true
-    cluster.bastion.allowedCIDRBlocks: ['0.0.0.0/0']
+    cluster.bastion.enabled: false
+    kubeadmControlPlane:
+      replicas: 1
     machinePool:
     - name: taco
       machineType: t3.2xlarge
-      replicas: 3
+      replicas: 1
       minSize: 1
       maxSize: 16
       rootVolume:
