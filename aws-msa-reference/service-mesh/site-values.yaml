@@ -29,31 +29,59 @@ charts:
     resources.limits.memory: 2048Mi
 
 - name: jaeger-operator
-  override: {}
+  override:
+    nodeSelector: $(serviceMeshControlNodeSelector)
 
 - name: servicemesh-jaeger-resource
   override:
     sampling.param: 100
+    storage.esIndexCleaner:
+      enabled: false
+      numberOfDays: 14
     storage.options.es:
       serverUrls: https://eck-elasticsearch-es-http.lma.svc:9200
       username: taco-jaeger
       password: password
     elasticsearch:
+      image:
+        repository: harbor.tks/tks/nginx-unprivileged
+        tag: 1.19-alpine
       host: eck-elasticsearch-es-http.lma.svc.$(clusterName)
       user:
         enabled: true
         username: taco-jaeger
         password: password
-    query.basePath: /jaeger
+    collector:
+      affinity:
+        nodeAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            nodeSelectorTerms:
+            - matchExpressions:
+              - key: servicemesh
+                operator: In
+                values:
+                - enabled
+    query:
+      basePath: /jaeger
+      affinity:
+        nodeAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            nodeSelectorTerms:
+            - matchExpressions:
+              - key: servicemesh
+                operator: In
+                values:
+                - enabled
 
 - name: kiali-operator
-  override: {}
+  override:
+    nodeSelector: $(serviceMeshControlNodeSelector)
 
 - name: servicemesh-kiali-resource
   override:
     auth.strategy: anonymous
     externalServices.prometheus.url: http://lma-prometheus.lma.svc:9090
-    externalServices.tracing.inClusterUrl: http://jaeger-operator-jaeger-query.istio-system:16686
+    externalServices.tracing.inClusterUrl: http://jaeger-operator-jaeger-query.istio-system:16686/jaeger
     externalServices.grafana.auth.type: basic
     externalServices.grafana.auth.username: admin
     externalServices.grafana.auth.password: password
