@@ -55,9 +55,11 @@ charts:
     auth.strategy: anonymous
     externalServices.prometheus.url: http://lma-prometheus.lma.svc:9090
     externalServices.tracing.inClusterUrl: http://jaeger-operator-jaeger-query.istio-system:16686
+    externalServices.tracing.url: https://jaeger-ft.taco-cat.xyz
     externalServices.grafana.auth.type: basic
     externalServices.grafana.auth.username: admin
     externalServices.grafana.auth.password: password
     externalServices.grafana.inClusterUrl: http://grafana.lma.svc:80
     externalServices.grafana.url: https://grafana-v2.taco-cat.xyz
     server.webRoot: /kiali
+
