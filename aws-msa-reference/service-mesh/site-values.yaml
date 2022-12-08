@@ -17,16 +17,68 @@ global:
 charts:
 - name: istiod
   override:
-    pilot.traceSampling: 1.0
+    revision: ""
+    pilot:
+      traceSampling: 1.0
+      nodeSelector: $(serviceMeshControlNodeSelector)
+    global:
+      istioNamespace: istio-system
+      hub: docker.io/istio
+      tag: 1.13.1
+      proxy:
+        image: proxyv2
+        tracer: "zipkin"
+      tracer:
+        zipkin: 
+          address: "jaeger-operator-jaeger-collector.istio-system:9411"
 
 - name: istio-ingress-gateway
   override:
+    image: istio/proxyv2:1.13.1
+    revision: ""
     replicaCount: 1
+    autoscaling:
+      enabled: true
+      minReplicas: 1
+      maxReplicas: 5
+      targetCPUUtilizationPercentage: 80
     service.type: LoadBalancer
     resources.requests.cpu: 1000m
     resources.requests.memory: 1024Mi
     resources.limits.cpu: 2000m
     resources.limits.memory: 2048Mi
+    labels:
+      app: $(ingressGatewayLabel)
+    nodeSelector: $(serviceMeshIngressNodeSelector)
+    affinity:
+      podAntiAffinity:
+        requiredDuringSchedulingIgnoredDuringExecution:
+        - labelSelector:
+            matchLabels:
+              app: $(ingressGatewayLabel)
+          topologyKey: "kubernetes.io/hostname"
+
+- name: istio-egress-gateway
+  override:
+    image: istio/proxyv2:1.13.1
+    revision: ""
+    replicaCount: 1
+    autoscaling.enabled: false
+    service.type: ClusterIP
+    resources.requests.cpu: 1000m
+    resources.requests.memory: 1024Mi
+    resources.limits.cpu: 2000m
+    resources.limits.memory: 2048Mi
+    labels:
+      app: $(egressGatewayLabel)
+    nodeSelector: $(serviceMeshEgressNodeSelector)
+    affinity:
+      podAntiAffinity:
+        requiredDuringSchedulingIgnoredDuringExecution:
+        - labelSelector:
+            matchLabels:
+              app: $(egressGatewayLabel)
+          topologyKey: "kubernetes.io/hostname"
 
 - name: jaeger-operator
   override:
@@ -38,20 +90,8 @@ charts:
     storage.esIndexCleaner:
       enabled: false
       numberOfDays: 14
-    storage.options.es:
-      serverUrls: https://eck-elasticsearch-es-http.lma.svc:9200
-      username: taco-jaeger
-      password: password
-    elasticsearch:
-      image:
-        repository: harbor.tks/tks/nginx-unprivileged
-        tag: 1.19-alpine
-      host: eck-elasticsearch-es-http.lma.svc.$(clusterName)
-      user:
-        enabled: true
-        username: taco-jaeger
-        password: password
     collector:
+      image: jaegertracing/jaeger-collector:1.29.0
       affinity:
         nodeAffinity:
           requiredDuringSchedulingIgnoredDuringExecution:
@@ -61,6 +101,17 @@ charts:
                 operator: In
                 values:
                 - enabled
+    storage:
+      esIndexCleaner:
+        enabled: true
+        image: jaegertracing/jaeger-es-index-cleaner:1.29.0
+        numberOfDays: 7
+        schedule: "55 04 * * *"
+      options:
+        es:
+          serverUrls: https://eck-elasticsearch-es-http.lma.svc:9200
+          username: taco-jaeger
+          password: password
     query:
       basePath: /jaeger
       affinity:
@@ -72,6 +123,17 @@ charts:
                 operator: In
                 values:
                 - enabled
+    agent:
+      image: jaegertracing/jaeger-agent:1.29.0
+    elasticsearch:
+      image:
+        repository: docker.io/nginxinc/nginx-unprivileged
+        tag: 1.19-alpine
+      host: eck-elasticsearch-es-http.lma.svc.$(clusterName)
+      user:
+        enabled: true
+        username: taco-jaeger
+        password: password
 
 - name: kiali-operator
   override:
