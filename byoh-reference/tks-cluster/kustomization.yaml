@@ -1,6 +1,0 @@
-resources:
-- ../base
-- ../infra/byoh
-
-transformers:
-- site-values.yaml
