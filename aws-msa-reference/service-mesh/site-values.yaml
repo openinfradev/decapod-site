@@ -18,9 +18,9 @@ charts:
 - name: istiod
   override:
     revision: ""
-    pilot:
-      traceSampling: 1.0
-      nodeSelector: $(serviceMeshControlNodeSelector)
+    pilot.image: istio/pilot:1.13.1
+    pilot.traceSampling: 1.0
+    pilot.nodeSelector: $(serviceMeshControlNodeSelector)
     global:
       istioNamespace: istio-system
       hub: docker.io/istio
@@ -83,6 +83,8 @@ charts:
 - name: jaeger-operator
   override:
     nodeSelector: $(serviceMeshControlNodeSelector)
+    image.repository: jaegertracing/jaeger-operator
+    image.tag: 1.29.1
 
 - name: servicemesh-jaeger-resource
   override:
@@ -113,6 +115,7 @@ charts:
           username: taco-jaeger
           password: password
     query:
+      image: jaegertracing/jaeger-query:1.29.0
       basePath: /jaeger
       affinity:
         nodeAffinity:
@@ -138,10 +141,16 @@ charts:
 - name: kiali-operator
   override:
     nodeSelector: $(serviceMeshControlNodeSelector)
+    image.repo: quay.io/kiali/kiali-operator
+    image.tag: v1.45.1
+    allowAdHocKialiImage: true
 
 - name: servicemesh-kiali-resource
   override:
     auth.strategy: anonymous
+    deployment.image_name: quay.io/kiali/kiali
+    deployment.image_version: v1.45.1
+    deployment.nodeSelector: $(serviceMeshControlNodeSelector)
     externalServices.prometheus.url: http://lma-prometheus.lma.svc:9090
     externalServices.tracing.inClusterUrl: http://jaeger-operator-jaeger-query.istio-system:16686/jaeger
     externalServices.grafana.auth.type: basic
