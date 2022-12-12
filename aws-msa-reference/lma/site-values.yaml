@@ -100,8 +100,8 @@ charts:
       outputs:
         loki: 
         - name: taco-loki
-          host: loki
-          port: 3100
+          host: loki-loki-distributed-gateway
+          port: 80
       targetLogs: 
       - tag: kube.*
         bufferChunkSize: 2M
