@@ -216,3 +216,7 @@ charts:
       - key: "node-role.kubernetes.io/master"
         effect: "NoSchedule"
         operator: "Exists"
+
+- name: eck-resource
+  override:
+    elasticsearch.adminPassword:
