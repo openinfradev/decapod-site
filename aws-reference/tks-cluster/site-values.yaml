@@ -12,13 +12,16 @@ global:
   mdMinSizePerAz: CHANGEME
   mdMaxSizePerAz: CHANGEME
   mdMachineType: CHANGEME
+  cpReplicas: CHANGEME
 charts:
 - name: cluster-api-aws
   override:
     sshKeyName: $(sshKeyName)
     cluster.name: $(clusterName)
     cluster.region: $(clusterRegion)
-    cluster.bastion.enabled: true
+    cluster.bastion.enabled: false
+    kubeadmControlPlane:
+      replicas: $(cpReplicas)
     machinePool:
     - name: taco
       machineType: t3.2xlarge
