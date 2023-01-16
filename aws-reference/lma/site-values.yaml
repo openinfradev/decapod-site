@@ -152,6 +152,8 @@ charts:
 
 - name: kubernetes-event-exporter
   override:
+    clustername: $(clusterName)
+
     conf.recievers:
       - name: loki
         type: file
