@@ -14,6 +14,10 @@ global:
   defaultUser: taco
   thanosObjstoreSecret: taco-objstore-secret
   thanosPrimaryCluster: false
+
+  lokiHost: loki-loki-distributed-gateway
+  lokiPort: 80
+
   # servicemesh dashboard and grafana
   realms: 04a70f29
   serviceDomain: taco-cat.xyz
@@ -100,8 +104,8 @@ charts:
       outputs:
         loki:
         - name: taco-loki
-          host: loki-loki-distributed-gateway
-          port: 80
+          host: $(lokiHost)
+          port: $(lokiPort)
       targetLogs:
       - tag: kube.*
         bufferChunkSize: 2M
@@ -156,10 +160,9 @@ charts:
     addons:
       loki:
         enabled: true
-        host: loki
-        port: 3100
+        host: $(lokiHost)
+        port: $(lokiPort)
         target_file: "/tmp/kubernetes-event.log"
-
     conf.default.hosts:
     - "https://eck-elasticsearch-es-http.lma.svc.$(clusterName):9200"
 
