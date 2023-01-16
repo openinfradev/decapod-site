@@ -14,6 +14,10 @@ global:
   defaultUser: taco
   thanosObjstoreSecret: taco-objstore-secret
   thanosPrimaryCluster: false
+
+  lokiHost: loki-loki-distributed-gateway
+  lokiPort: 80
+
   # servicemesh dashboard and grafana
   realms: 04a70f29
   serviceDomain: taco-cat.xyz
@@ -33,7 +37,7 @@ charts:
     prometheus.prometheusSpec.retention: 2d
     prometheus.prometheusSpec.externalLabels.taco_cluster: $(clusterName)
     prometheus.prometheusSpec.nodeSelector: $(nodeSelector)
-    
+
     alertmanager.service.type: NodePort
     alertmanager.service.nodePort: 30111
     alertmanager.alertmanagerSpec.alertmanagerConfigSelector.matchLabels.alertmanagerConfig: example
@@ -41,7 +45,7 @@ charts:
     alertmanager.alertmanagerSpec.retention: 2h
     alertmanager.config.global.slack_api_url: https://hooks.slack.com/services/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
 
-- name: prometheus-node-exporter  
+- name: prometheus-node-exporter
   override:
     hostNetwork: false
 
@@ -98,11 +102,11 @@ charts:
     fluentbit:
       clusterName: $(clusterName)
       outputs:
-        loki: 
+        loki:
         - name: taco-loki
-          host: loki-loki-distributed-gateway
-          port: 80
-      targetLogs: 
+          host: $(lokiHost)
+          port: $(lokiPort)
+      targetLogs:
       - tag: kube.*
         bufferChunkSize: 2M
         bufferMaxSize: 5M
@@ -148,18 +152,19 @@ charts:
 
 - name: kubernetes-event-exporter
   override:
+    clustername: $(clusterName)
+
     conf.recievers:
       - name: loki
         type: file
         config:
           path: "/tmp/kubernetes-event.log"
     addons:
-      loki: 
+      loki:
         enabled: true
-        host: loki
-        port: 3100      
+        host: $(lokiHost)
+        port: $(lokiPort)
         target_file: "/tmp/kubernetes-event.log"
-
     conf.default.hosts:
     - "https://eck-elasticsearch-es-http.lma.svc.$(clusterName):9200"
 
@@ -217,6 +222,6 @@ charts:
         effect: "NoSchedule"
         operator: "Exists"
 
-- name: eck-resource
+- name: loki
   override:
-    elasticsearch.adminPassword:
+    global.dnsService: kube-dns
