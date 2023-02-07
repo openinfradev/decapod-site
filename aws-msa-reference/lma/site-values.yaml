@@ -168,6 +168,21 @@ charts:
     conf.default.hosts:
     - "https://eck-elasticsearch-es-http.lma.svc.$(clusterName):9200"
 
+- name: minio
+  override:
+    users:
+      - accessKey: $(defaultUser)
+        secretKey: $(defaultPassword)
+        policy: consoleAdmin
+    buckets:
+      - name: thanos
+        policy: public
+        purge: false
+        versioning: true
+        objectlocking: false
+    persistence.storageClass: $(storageClassName)
+    persistence.size: 20Gi
+
 - name: thanos
   override:
     global.storageClass: $(storageClassName)
