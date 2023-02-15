@@ -1,0 +1,222 @@
+apiVersion: openinfradev.github.com/v1
+kind: HelmValuesTransformer
+metadata:
+  name: site
+
+global:
+  nodeSelector:
+    taco-lma: enabled
+  clusterName: cluster.local
+  storageClassName: taco-storage
+  repository: https://openinfradev.github.io/helm-repo/
+  serviceScrapeInterval: 30s
+  defaultPassword: password
+  defaultUser: taco
+  thanosObjstoreSecret: taco-objstore-secret
+  thanosPrimaryCluster: false
+  # servicemesh dashboard and grafana
+  realms: 04a70f29
+  serviceDomain: taco-cat.xyz
+  keycloakDomain: keycloak-eom.taco-cat.xyz
+  grafanaClientSecret: JLtsanYtrCg21RGxrcVmQP0GeuDFUhpA
+
+charts:
+- name: prometheus-operator
+  override:
+    prometheusOperator.nodeSelector: $(nodeSelector)
+    prometheusOperator.admissionWebhooks.patch.image.sha: ""
+
+- name: prometheus
+  override:
+    prometheus.prometheusSpec.storageSpec.volumeClaimTemplate.spec.storageClassName: $(storageClassName)
+    prometheus.prometheusSpec.storageSpec.volumeClaimTemplate.spec.resources.requests.storage: 20Gi
+    prometheus.prometheusSpec.retention: 2d
+    prometheus.prometheusSpec.externalLabels.taco_cluster: $(clusterName)
+    prometheus.prometheusSpec.nodeSelector: $(nodeSelector)
+
+    alertmanager.service.type: NodePort
+    alertmanager.service.nodePort: 30111
+    alertmanager.alertmanagerSpec.alertmanagerConfigSelector.matchLabels.alertmanagerConfig: example
+    alertmanager.alertmanagerSpec.nodeSelector: $(nodeSelector)
+    alertmanager.alertmanagerSpec.retention: 2h
+    alertmanager.config.global.slack_api_url: https://hooks.slack.com/services/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
+
+- name: prometheus-node-exporter
+  override:
+    hostNetwork: false
+
+- name: kube-state-metrics
+  override:
+    nodeSelector: $(nodeSelector)
+
+- name: prometheus-pushgateway
+  override:
+    nodeSelector: $(nodeSelector)
+
+- name: prometheus-process-exporter
+  override:
+    conf.processes: dockerd,kubelet,kube-proxy,ntpd,node
+    pod.hostNetwork: false
+
+- name: grafana
+  override:
+    adminPassword: password
+    persistence.storageClassName: $(storageClassName)
+    sidecar.dashboards.searchNamespace: ALL
+    # grafana oidc
+    service.type: ClusterIP
+    grafana.ini.server:
+      domain: dashboard-$(realms).$(serviceDomain)
+      root_url: https://dashboard-$(realms).$(serviceDomain)/grafana
+      serve_from_sub_path: true
+    grafana.ini.auth.generic_oauth:
+      enabled: true
+      name: keycloak
+      allow_sign_up: true
+      client_id: grafana
+      client_secret: $(grafanaClientSecret)
+      scopes: openid profile email
+      auth_url: https://$(keycloakDomain)/auth/realms/$(realms)/protocol/openid-connect/auth
+      token_url: https://$(keycloakDomain)/auth/realms/$(realms)/protocol/openid-connect/token
+      api_url: https://$(keycloakDomain)/auth/realms/$(realms)/protocol/openid-connect/userinfo
+    grafana.ini.auth:
+      disable_login_form: false
+      oauth_auto_login: true
+      disable_signout_menu: true
+    grafana.ini.security:
+      allow_embedding: true
+      cookie_secure: true
+      cookie_samesite: none
+    grafana.ini.user:
+      auto_assign_org: true
+      auto_assign_org_role: Admin
+
+- name: fluent-operator
+
+- name: fluentbit
+  override:
+    fluentbit:
+      clusterName: $(clusterName)
+      outputs:
+        loki:
+        - name: taco-loki
+          host: loki-loki-distributed-gateway
+          port: 80
+      targetLogs:
+      - tag: kube.*
+        bufferChunkSize: 2M
+        bufferMaxSize: 5M
+        do_not_store_as_default: false
+        index: container
+        loki_name: taco-loki
+        memBufLimit: 20MB
+        multi_index:
+        - index: platform
+          loki_name: taco-loki
+          key: $kubernetes['namespace_name']
+          value: kube-system|taco-system|lma|argo
+        parser: docker
+        path: /var/log/containers/*.log
+        type: kubernates
+        extraArgs:
+          multilineParser: docker, cri
+      - tag: syslog.*
+        loki_name: taco-loki
+        index: syslog
+        parser: taco-syslog-parser-for-ubuntu
+        path: /var/log/syslog
+        type: syslog
+
+- name: addons
+  override:
+    SPECIAL_VALUE: SPECIAL
+    serviceMonitor.trident:
+      enabled: false
+      interval: $(serviceScrapeInterval)
+    serviceMonitor.kubelet.interval: 30s
+    serviceMonitor.additionalScrapeConfigs:
+    grafanaDashboard.istio.enabled: false
+    grafanaDashboard.jaeger.enabled: false
+    serviceMonitor.istio.enabled: false
+    serviceMonitor.jaeger.enabled: false
+    prometheusRules.istio.aggregation.enabled: false
+    prometheusRules.istio.optimization.enabled: false
+
+- name: prometheus-adapter
+  override:
+    nodeSelector: $(nodeSelector)
+
+- name: kubernetes-event-exporter
+  override:
+    conf.recievers:
+      - name: loki
+        type: file
+        config:
+          path: "/tmp/kubernetes-event.log"
+    addons:
+      loki:
+        enabled: true
+        host: loki
+        port: 3100
+        target_file: "/tmp/kubernetes-event.log"
+
+    conf.default.hosts:
+    - "https://eck-elasticsearch-es-http.lma.svc.$(clusterName):9200"
+
+- name: thanos
+  override:
+    global.storageClass: $(storageClassName)
+    clusterDomain: $(clusterName)
+    existingObjstoreSecret: $(thanosObjstoreSecret)
+    query.nodeSelector: $(nodeSelector)
+    queryFrontend.nodeSelector: $(nodeSelector)
+    queryFrontend.service.type: NodePort
+    queryFrontend.service.http.nodePort: 30007
+    querier.stores:
+    - prometheus-operated.lma.svc.$(clusterName):10901
+    bucketweb.enabled: $(thanosPrimaryCluster)
+    bucketweb.nodeSelector: $(nodeSelector)
+    compactor.enabled: $(thanosPrimaryCluster)
+    compactor.nodeSelector: $(nodeSelector)
+    storegateway.nodeSelector: $(nodeSelector)
+    compactor.persistence.size: 8Gi
+    # compactor.extraFlags:
+    # - --compact.enable-vertical-compaction
+    # - --deduplication.replica-label="replica"
+    storegateway.persistence.size: 8Gi
+    ruler.enabled: $(thanosPrimaryCluster)
+    ruler.nodeSelector: $(nodeSelector)
+    ruler.alertmanagers:
+    - http://fed-master-alertmanager.lma.svc.$(clusterName):9093
+    ruler.persistence.size: 8Gi
+    minio.accessKey.password: $(defaultUser)
+    minio.secretKey.password: $(defaultPassword)
+    minio.defaultBuckets: thanos
+    minio.persistence.storageClass: $(storageClassName)
+    minio.persistence.accessMode: ReadWriteOnce
+    minio.persistence.size: 10Gi
+
+- name: thanos-config
+  override:
+    objectStorage:
+      bucketName: thanos
+      endpoint: minio.lma.svc.$(clusterName):9000
+      access_key: $(defaultUser)
+      secret_key: $(defaultPassword)
+      secretName: $(thanosObjstoreSecret)
+    sidecarsService.name: thanos-sidecars
+    sidecarsService.endpoints:
+      - 192.168.97.102 # should not be in the loopback range (127.0.0.0/8)
+
+- name: prepare-etcd-secret
+  override:
+    nodeSelector:
+      "node-role.kubernetes.io/master": ""
+    tolerations:
+      - key: "node-role.kubernetes.io/master"
+        effect: "NoSchedule"
+        operator: "Exists"
+
+- name: loki
+  override:
+    global.dnsService: kube-dns
