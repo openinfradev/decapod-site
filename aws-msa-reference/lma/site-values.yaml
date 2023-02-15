@@ -209,12 +209,6 @@ charts:
     ruler.alertmanagers:
     - http://fed-master-alertmanager.lma.svc.$(clusterName):9093
     ruler.persistence.size: 8Gi
-    minio.accessKey.password: $(defaultUser)
-    minio.secretKey.password: $(defaultPassword)
-    minio.defaultBuckets: thanos
-    minio.persistence.storageClass: $(storageClassName)
-    minio.persistence.accessMode: ReadWriteOnce
-    minio.persistence.size: 10Gi
 
 - name: thanos-config
   override:
