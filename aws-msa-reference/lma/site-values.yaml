@@ -182,6 +182,7 @@ charts:
         objectlocking: false
     persistence.storageClass: $(storageClassName)
     persistence.size: 20Gi
+    persistence.accessMode: ReadWriteOnce
 
 - name: thanos
   override:
