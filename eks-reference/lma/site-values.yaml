@@ -14,10 +14,6 @@ global:
   defaultUser: taco
   thanosObjstoreSecret: taco-objstore-secret
   thanosPrimaryCluster: false
-
-  lokiHost: loki-loki-distributed-gateway
-  lokiPort: 80
-
   # servicemesh dashboard and grafana
   realms: 04a70f29
   serviceDomain: taco-cat.xyz
@@ -68,7 +64,7 @@ charts:
     persistence.storageClassName: $(storageClassName)
     sidecar.dashboards.searchNamespace: ALL
     # grafana oidc
-    service.type: LoadBalancer
+    service.type: ClusterIP
     grafana.ini.server:
       domain: dashboard-$(realms).$(serviceDomain)
       root_url: https://dashboard-$(realms).$(serviceDomain)/grafana
@@ -104,8 +100,8 @@ charts:
       outputs:
         loki:
         - name: taco-loki
-          host: $(lokiHost)
-          port: $(lokiPort)
+          host: loki-loki-distributed-gateway
+          port: 80
       targetLogs:
       - tag: kube.*
         bufferChunkSize: 2M
@@ -152,8 +148,6 @@ charts:
 
 - name: kubernetes-event-exporter
   override:
-    clustername: $(clusterName)
-
     conf.recievers:
       - name: loki
         type: file
@@ -162,9 +156,10 @@ charts:
     addons:
       loki:
         enabled: true
-        host: $(lokiHost)
-        port: $(lokiPort)
+        host: loki
+        port: 3100
         target_file: "/tmp/kubernetes-event.log"
+
     conf.default.hosts:
     - "https://eck-elasticsearch-es-http.lma.svc.$(clusterName):9200"
 

@@ -18,11 +18,19 @@ charts:
 - name: cluster-api-aws
   override:
     sshKeyName: $(sshKeyName)
-    cluster.name: $(clusterName)
-    cluster.region: $(clusterRegion)
-    cluster.bastion.enabled: false
-    kubeadmControlPlane:
-      replicas: 1
+    cluster:
+      name: $(clusterName)
+      region: $(clusterRegion)
+      eksEnabled: true
+      eksAddons:
+      - name: "aws-ebs-csi-driver"
+        version: "v1.15.0-eksbuild.1"
+        conflictResolution: "overwrite"
+        serviceAccountRoleARN: arn:aws:iam::$(awsAccountID):role/AmazonEKS_EBS_CSI_DriverRole_$(clusterName)
+      - name: "vpc-cni"
+        version: "v1.10.1-eksbuild.1"
+        conflictResolution: "overwrite"
+      bastion.enabled: false
     machinePool:
     - name: taco
       machineType: t3.2xlarge
@@ -53,7 +61,7 @@ charts:
 
 - name: kubernetes-addons
   override:
-    cni.calico.enabled: true
+    cni.calico.enabled: false
 
 - name: ingress-nginx
   override:
