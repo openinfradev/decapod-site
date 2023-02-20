@@ -168,6 +168,27 @@ charts:
     conf.default.hosts:
     - "https://eck-elasticsearch-es-http.lma.svc.$(clusterName):9200"
 
+- name: minio
+  override:
+    users:
+      - accessKey: $(defaultUser)
+        secretKey: $(defaultPassword)
+        policy: consoleAdmin
+    buckets:
+      - name: thanos
+        policy: public
+        purge: false
+        versioning: true
+        objectlocking: false
+      - name: loki
+        policy: public
+        purge: false
+        versioning: true
+        objectlocking: false
+    persistence.storageClass: $(storageClassName)
+    persistence.size: 20Gi
+    persistence.accessMode: ReadWriteOnce
+
 - name: thanos
   override:
     global.storageClass: $(storageClassName)
@@ -194,12 +215,6 @@ charts:
     ruler.alertmanagers:
     - http://fed-master-alertmanager.lma.svc.$(clusterName):9093
     ruler.persistence.size: 8Gi
-    minio.accessKey.password: $(defaultUser)
-    minio.secretKey.password: $(defaultPassword)
-    minio.defaultBuckets: thanos
-    minio.persistence.storageClass: $(storageClassName)
-    minio.persistence.accessMode: ReadWriteOnce
-    minio.persistence.size: 10Gi
 
 - name: thanos-config
   override:
