@@ -18,12 +18,12 @@ charts:
 - name: istiod
   override:
     revision: ""
-    pilot.image: istio/pilot:1.13.1
+    pilot.image: harbor-cicd.taco-cat.xyz/tks/pilot:1.13.1
     pilot.traceSampling: 1.0
     pilot.nodeSelector: $(serviceMeshControlNodeSelector)
     global:
       istioNamespace: istio-system
-      hub: docker.io/istio
+      hub: harbor-cicd.taco-cat.xyz/tks/istio
       tag: 1.13.1
       proxy:
         image: proxyv2
@@ -34,7 +34,7 @@ charts:
 
 - name: istio-ingress-gateway
   override:
-    image: istio/proxyv2:1.13.1
+    image: harbor-cicd.taco-cat.xyz/tks/proxyv2:1.13.1
     revision: ""
     replicaCount: 1
     autoscaling:
@@ -60,7 +60,7 @@ charts:
 
 - name: istio-egress-gateway
   override:
-    image: istio/proxyv2:1.13.1
+    image: harbor-cicd.taco-cat.xyz/tks/proxyv2:1.13.1
     revision: ""
     replicaCount: 1
     autoscaling.enabled: false
@@ -93,7 +93,7 @@ charts:
       enabled: false
       numberOfDays: 14
     collector:
-      image: jaegertracing/jaeger-collector:1.29.0
+      image: harbor-cicd.taco-cat.xyz/tks/jaeger-collector:1.29.0
       affinity:
         nodeAffinity:
           requiredDuringSchedulingIgnoredDuringExecution:
@@ -106,7 +106,7 @@ charts:
     storage:
       esIndexCleaner:
         enabled: true
-        image: jaegertracing/jaeger-es-index-cleaner:1.29.0
+        image: harbor-cicd.taco-cat.xyz/tks/jaeger-es-index-cleaner:1.29.0
         numberOfDays: 7
         schedule: "55 04 * * *"
       options:
@@ -115,7 +115,7 @@ charts:
           username: taco-jaeger
           password: password
     query:
-      image: jaegertracing/jaeger-query:1.29.0
+      image: harbor-cicd.taco-cat.xyz/tks/jaeger-query:1.29.0
       basePath: /jaeger
       affinity:
         nodeAffinity:
@@ -127,7 +127,7 @@ charts:
                 values:
                 - enabled
     agent:
-      image: jaegertracing/jaeger-agent:1.29.0
+      image: harbor-cicd.taco-cat.xyz/tks/jaeger-agent:1.29.0
     elasticsearch:
       image:
         repository: docker.io/nginxinc/nginx-unprivileged
