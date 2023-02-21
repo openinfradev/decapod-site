@@ -5,7 +5,6 @@ DOCKER_IMAGE_REPO="docker.io"
 GITHUB_IMAGE_REPO="ghcr.io"
 outputdir="output"
 
-rm -rf decapod-base-yaml
 site_list=$(ls -d */ | sed 's/\///g' | grep -v 'docs' | grep -v $outputdir | grep -v 'offline')
 
 function usage {
