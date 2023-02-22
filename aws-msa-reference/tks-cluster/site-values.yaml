@@ -19,6 +19,7 @@ charts:
   override:
     sshKeyName: $(sshKeyName)
     cluster.name: $(clusterName)
+    eksEnabled: false
     cluster.region: $(clusterRegion)
     cluster.bastion.enabled: false
     kubeadmControlPlane:

@@ -20,6 +20,7 @@ charts:
     sshKeyName: $(sshKeyName)
     cluster.name: $(clusterName)
     cluster.region: $(clusterRegion)
+    eksEnabled: false
     cluster.bastion.enabled: false
     kubeadmControlPlane:
       replicas: 1
