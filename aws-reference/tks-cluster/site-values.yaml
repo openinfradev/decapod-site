@@ -49,9 +49,6 @@ charts:
         size: 50
         type: gp2
 
-- name: aws-ebs-csi-driver
-  override:
-
 - name: ingress-nginx
   override:
     controller:
