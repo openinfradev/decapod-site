@@ -85,3 +85,11 @@ charts:
   override:
     deployMgmtRbacOnly:
       targetNamespace: $(clusterName)
+
+- name: ack-resources
+  override:
+    s3:
+      enabled: true
+      name:
+      - tks_thanos_$(clusterName)
+      - tks_loki_$(clusterName)
