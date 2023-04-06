@@ -56,13 +56,6 @@ charts:
         size: 50
         type: gp2
 
-- name: aws-ebs-csi-driver
-  override:
-
-- name: kubernetes-addons
-  override:
-    cni.calico.enabled: false
-
 - name: ingress-nginx
   override:
     controller:

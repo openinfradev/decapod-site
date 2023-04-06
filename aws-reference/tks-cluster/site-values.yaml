@@ -18,10 +18,26 @@ charts:
 - name: cluster-api-aws
   override:
     sshKeyName: $(sshKeyName)
-    cluster.name: $(clusterName)
-    cluster.region: $(clusterRegion)
-    eksEnabled: false
-    cluster.bastion.enabled: false
+    cluster:
+      name: $(clusterName)
+      eksEnabled: false
+      region: $(clusterRegion)
+      network:
+        cni:
+          cniIngressRules:
+          - description: bgp (calico)
+            protocol: tcp
+            fromPort: 179
+            toPort: 179
+          - description: IP-in-IP (calico)
+            protocol: "4"
+            fromPort: -1
+            toPort: 65535
+          - description: Typha (calico)
+            protocol: tcp
+            fromPort: 5473
+            toPort: 5473
+      bastion.enabled: false
     kubeadmControlPlane:
       replicas: $(cpReplicas)
     machinePool:
@@ -48,13 +64,6 @@ charts:
       rootVolume:
         size: 50
         type: gp2
-
-- name: aws-ebs-csi-driver
-  override:
-
-- name: kubernetes-addons
-  override:
-    cni.calico.enabled: true
 
 - name: ingress-nginx
   override:
