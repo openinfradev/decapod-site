@@ -17,6 +17,10 @@ global:
 
   lokiHost: loki-loki-distributed-gateway
   lokiPort: 80
+  s3Host: minio.lma.svc
+  s3Port: 9000
+
+  grafanaDatasourceMetric: lma-prometheus.lma:9090
 
   # servicemesh dashboard and grafana
   realms: 04a70f29
@@ -145,7 +149,7 @@ charts:
     serviceMonitor.jaeger.enabled: false
     prometheusRules.istio.aggregation.enabled: false
     prometheusRules.istio.optimization.enabled: false
-    grafanaDatasource.prometheus.url: "lma-prometheus.lma:9090"
+    grafanaDatasource.prometheus.url: $(grafanaDatasourceMetric)
     # grafanaDatasource.prometheus.url: "thanos-query.lma:9090"
     grafanaDatasource.loki.url: $(lokiHost):$(lokiPort)
 
@@ -191,6 +195,7 @@ charts:
     persistence.storageClass: $(storageClassName)
     persistence.size: 20Gi
     persistence.accessMode: ReadWriteOnce
+    service.type: LoadBalancer
 
 - name: thanos
   override:
@@ -220,7 +225,7 @@ charts:
   override:
     objectStorage:
       bucketName: thanos
-      endpoint: minio.lma.svc.$(clusterName):9000
+      endpoint: $(s3Host):$(s3Port)
       access_key: $(defaultUser)
       secret_key: $(defaultPassword)
       secretName: $(thanosObjstoreSecret)
@@ -240,3 +245,4 @@ charts:
 - name: loki
   override:
     global.dnsService: kube-dns
+    service.type: LoadBalancer
