@@ -245,4 +245,4 @@ charts:
 - name: loki
   override:
     global.dnsService: kube-dns
-    service.type: LoadBalancer
+    gateway.service.type: LoadBalancer
