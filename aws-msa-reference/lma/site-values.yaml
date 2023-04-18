@@ -21,6 +21,9 @@ global:
   s3Port: 9000
 
   grafanaDatasourceMetric: lma-prometheus.lma:9090
+  thanosQueryStores:
+  - thanos-storegateway:10901
+  - prometheus-operated:10901
 
   # servicemesh dashboard and grafana
   realms: 04a70f29
@@ -206,8 +209,7 @@ charts:
     queryFrontend.nodeSelector: $(nodeSelector)
     queryFrontend.service.type: NodePort
     queryFrontend.service.http.nodePort: 30007
-    querier.stores:
-    - prometheus-operated.lma.svc.$(clusterName):10901
+    querier.stores: $(thanosQueryStores)
     bucketweb.nodeSelector: $(nodeSelector)
     compactor.nodeSelector: $(nodeSelector)
     storegateway.nodeSelector: $(nodeSelector)
