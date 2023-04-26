@@ -193,7 +193,7 @@ charts:
         versioning: true
         objectlocking: false
     persistence.storageClass: $(storageClassName)
-    persistence.size: 500Gi
+    persistence.size: 3000Gi
     persistence.accessMode: ReadWriteOnce
     service.type: LoadBalancer
 
