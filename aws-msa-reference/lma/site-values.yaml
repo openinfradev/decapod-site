@@ -200,14 +200,15 @@ charts:
 - name: thanos
   override:
     global.storageClass: $(storageClassName)
-    clusterDomain: $(clusterName)
+    # temporarily add annotation because a cluster is using not cluster-name but 'cluster.local'
+    # clusterDomain: $(clusterName)
     existingObjstoreSecret: $(thanosObjstoreSecret)
     query.nodeSelector: $(nodeSelector)
     queryFrontend.nodeSelector: $(nodeSelector)
     queryFrontend.service.type: NodePort
     queryFrontend.service.http.nodePort: 30007
     querier.stores:
-    - prometheus-operated.lma.svc.$(clusterName):10901
+    - prometheus-operated:10901
     bucketweb.nodeSelector: $(nodeSelector)
     compactor.nodeSelector: $(nodeSelector)
     storegateway.nodeSelector: $(nodeSelector)
@@ -218,7 +219,7 @@ charts:
     storegateway.persistence.size: 8Gi
     ruler.nodeSelector: $(nodeSelector)
     ruler.alertmanagers:
-    - http://fed-master-alertmanager.lma.svc.$(clusterName):9093
+    - http://alertmanager-operated:9093
     ruler.persistence.size: 8Gi
 
 - name: thanos-config
