@@ -13,7 +13,6 @@ global:
   mdMaxSizePerAz: CHANGEME
   mdMachineType: CHANGEME
   cpReplicas: CHANGEME
-  awsAccountID: CHANGEME
   cloudAccountID: CHANGEME
 charts:
 - name: cluster-api-aws
