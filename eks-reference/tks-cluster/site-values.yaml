@@ -13,7 +13,7 @@ global:
   mdMaxSizePerAz: CHANGEME
   mdMachineType: CHANGEME
   cpReplicas: CHANGEME
-  awsAccountID: CHANGEME
+  cloudAccountID: CHANGEME
 charts:
 - name: cluster-api-aws
   override:
@@ -26,10 +26,12 @@ charts:
       - name: "aws-ebs-csi-driver"
         version: "v1.15.0-eksbuild.1"
         conflictResolution: "overwrite"
-        serviceAccountRoleARN: arn:aws:iam::$(awsAccountID):role/AmazonEKS_EBS_CSI_DriverRole_$(clusterName)
       - name: "vpc-cni"
         version: "v1.10.1-eksbuild.1"
         conflictResolution: "overwrite"
+      multitenancyId:
+        kind: AWSClusterRoleIdentity
+        name: $(cloudAccountID)-account-role
       bastion.enabled: false
     machinePool:
     - name: taco

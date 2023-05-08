@@ -13,7 +13,7 @@ global:
   mdMaxSizePerAz: CHANGEME
   mdMachineType: CHANGEME
   cpReplicas: CHANGEME
-  awsAccountID: CHANGEME
+  cloudAccountID: CHANGEME
 charts:
 - name: cluster-api-aws
   override:
@@ -21,6 +21,9 @@ charts:
     cluster:
       name: $(clusterName)
       eksEnabled: false
+      multitenancyId:
+        kind: AWSClusterRoleIdentity
+        name: $(cloudAccountID)-account-role
       region: $(clusterRegion)
       network:
         cni:
@@ -102,5 +105,3 @@ charts:
       name:
       - tks-thanos
       - tks-loki
-      # - tks-thanos-$(clusterName)
-      # - tks-loki-$(clusterName)
