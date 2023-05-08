@@ -48,7 +48,8 @@ charts:
         stargate:
           size: 1
           heapSize: 384M
-          nodeSelector: $(serviceMeshControlNodeSelector)
+          nodeSelector:
+            tks-msa: enabled
 
 - name: istiod
   override:
