@@ -65,7 +65,7 @@ charts:
     revision: ""
     replicaCount: 2
     autoscaling:
-      enabled: true
+      enabled: false
       minReplicas: 1
       maxReplicas: 5
       targetCPUUtilizationPercentage: 80
@@ -141,6 +141,7 @@ charts:
         password: tksword
       nodeSelector:
         tks-msa: enabled
+    elasticsearch.user.enabled: false
 
 - name: kiali-operator
   override:
