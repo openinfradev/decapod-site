@@ -54,6 +54,7 @@ charts:
 - name: istiod
   override:
     revision: ""
+    pilot.autoscaleEnabled: false
     pilot.traceSampling: 1.0
     pilot.nodeSelector: $(serviceMeshControlNodeSelector)
     global.proxy.clusterDomain: $(clusterName)
