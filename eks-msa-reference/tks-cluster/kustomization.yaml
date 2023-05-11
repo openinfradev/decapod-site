@@ -1,0 +1,6 @@
+resources:
+- ../base
+- ../infra/aws
+
+transformers:
+- site-values.yaml

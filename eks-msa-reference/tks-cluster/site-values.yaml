@@ -1,0 +1,89 @@
+apiVersion: openinfradev.github.com/v1
+kind: HelmValuesTransformer
+metadata:
+  name: site
+
+global:
+  # These values are replaced on cluster creation by workflow
+  clusterName: cluster.local
+  sshKeyName: CHANGEME
+  clusterRegion: CHANGEME
+  mdNumOfAz: CHANGEME
+  mdMinSizePerAz: CHANGEME
+  mdMaxSizePerAz: CHANGEME
+  mdMachineType: CHANGEME
+  cpReplicas: CHANGEME
+  mpReplicas: CHANGEME
+  mpMachineType: CHANGEME
+  cloudAccountID: CHANGEME
+charts:
+- name: cluster-api-aws
+  override:
+    sshKeyName: $(sshKeyName)
+    cluster:
+      name: $(clusterName)
+      region: $(clusterRegion)
+      eksEnabled: true
+      kubernetesVersion: v1.25.9
+      eksAddons:
+      - name: "aws-ebs-csi-driver"
+        version: "v1.18.0-eksbuild.1"
+        conflictResolution: "overwrite"
+      - name: "vpc-cni"
+        conflictResolution: "overwrite"
+        version: "v1.12.6-eksbuild.2"
+      multitenancyId:
+        kind: AWSClusterRoleIdentity
+        name: $(cloudAccountID)-account-role
+      bastion.enabled: false
+    machinePool:
+    - name: taco
+      machineType: $(mpMachineType)
+      replicas: $(mpReplicas)
+      minSize: 1
+      maxSize: 16
+      rootVolume:
+        size: 200
+        type: gp2
+      labels:
+        taco-lma: enabled
+        servicemesh: enabled
+        taco-ingress-gateway: enabled
+    - name: normal
+      machineType: $(mdMachineType)
+      replicas: $(mdNumOfAz)
+      minSize: $(mdMinSizePerAz)
+      maxSize: $(mdMaxSizePerAz)
+      rootVolume:
+        size: 50
+        type: gp2
+
+- name: ingress-nginx
+  override:
+    controller:
+      nodeSelector:
+        taco-lma: enabled
+      resources:
+        requests:
+          cpu: 2000m
+          memory: 4Gi
+      service:
+        externalTrafficPolicy: Local
+        annotations:
+          service.beta.kubernetes.io/aws-load-balancer-name: "taco-ingress-nlb"
+          service.beta.kubernetes.io/aws-load-balancer-type: "nlb"
+          service.beta.kubernetes.io/aws-load-balancer-proxy-protocol: "*"
+        type: LoadBalancer
+      config:
+        enable-underscores-in-headers: "true"
+        proxy-body-size: "10m"
+
+- name: cluster-autoscaler
+  override:
+    discoveryNamespace: $(clusterName)
+    discoveryClusterName: $(clusterName)
+
+- name: cluster-autoscaler-rbac
+  override:
+    deployMgmtRbacOnly:
+      targetNamespace: $(clusterName)
