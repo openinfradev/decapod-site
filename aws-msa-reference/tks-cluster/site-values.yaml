@@ -13,6 +13,9 @@ global:
   mdMaxSizePerAz: CHANGEME
   mdMachineType: CHANGEME
   cpReplicas: CHANGEME
+  mpReplicas: CHANGEME
+  mpMachineType: CHANGEME
+  awsAccountID: CHANGEME
   cloudAccountID: CHANGEME
 charts:
 - name: cluster-api-aws
@@ -45,8 +48,8 @@ charts:
       replicas: $(cpReplicas)
     machinePool:
     - name: taco
-      machineType: t3.2xlarge
-      replicas: 3
+      machineType: $(mpMachineType)
+      replicas: $(mpReplicas)
       minSize: 1
       maxSize: 16
       rootVolume:
