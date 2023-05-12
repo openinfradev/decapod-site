@@ -1,0 +1,178 @@
+apiVersion: openinfradev.github.com/v1
+kind: HelmValuesTransformer
+metadata:
+  name: site
+
+global:
+  clusterName: cluster.local
+  namespace: tks-msa
+  imageRepo: harbor-cicd.taco-cat.xyz/tks
+  serviceMeshControlNodeSelector:
+    tks-msa: enabled
+  serviceMeshIngressNodeSelector:
+    tks-ingressgateway: enabled
+  serviceMeshEgressNodeSelector:
+    tks-egressgateway: enabled
+  ingressGatewayLabel: istio-ingressgateway
+  egressGatewayLabel: istio-egressgateway
+
+charts:
+- name: cert-manager
+  override: {}
+
+- name: k8ssandra-operator
+  override: {}
+
+- name: servicemesh-k8ssandra-resource
+  override:
+    namespace: $(namespace)
+    cassandra:
+      datacenters:
+        size: 2
+        config:
+          heapSize: 2048M
+        storageConfig:
+          storageClassName: taco-storage
+          accessModes: ReadWriteOnce
+          size: 300Gi
+        racks:
+          affinity:
+            nodeAffinity:
+              requiredDuringSchedulingIgnoredDuringExecution:
+                nodeSelectorTerms:
+                - matchExpressions:
+                  - key: tks-msa
+                    operator: In
+                    values:
+                    - enabled
+        stargate:
+          size: 1
+          heapSize: 384M
+          nodeSelector:
+            tks-msa: enabled
+
+- name: istiod
+  override:
+    revision: ""
+    pilot.autoscaleEnabled: false
+    pilot.traceSampling: 1.0
+    pilot.nodeSelector: $(serviceMeshControlNodeSelector)
+    global.proxy.clusterDomain: $(clusterName)
+    global.tracer.zipkin.address: jaeger-operator-jaeger-collector.$(namespace):9411
+
+- name: istio-ingressgateway
+  override:
+    revision: ""
+    replicaCount: 2
+    autoscaling:
+      enabled: false
+      minReplicas: 1
+      maxReplicas: 5
+      targetCPUUtilizationPercentage: 80
+    service.type: LoadBalancer
+    resources.requests.cpu: 1000m
+    resources.requests.memory: 1024Mi
+    resources.limits.cpu: 2000m
+    resources.limits.memory: 2048Mi
+    nodeSelector: $(serviceMeshIngressNodeSelector)
+
+- name: istio-egressgateway
+  override:
+    revision: ""
+    replicaCount: 1
+    autoscaling.enabled: false
+    service.type: ClusterIP
+    resources.requests.cpu: 1000m
+    resources.requests.memory: 1024Mi
+    resources.limits.cpu: 2000m
+    resources.limits.memory: 2048Mi
+    nodeSelector: $(serviceMeshEgressNodeSelector)
+
+- name: jaeger-operator
+  override:
+    nodeSelector: $(serviceMeshControlNodeSelector)
+
+- name: servicemesh-jaeger-resource
+  override:
+    namespace: tks-msa
+    sampling.param: 100
+    collector.resources.requests.cpu: 500m
+    collector.resources.requests.memory: 1024Mi
+    collector.resources.limits.cpu: 1000m
+    collector.resources.limits.memory: 2048Mi
+    collector:
+      image: harbor-cicd.taco-cat.xyz/tks/jaeger-collector:1.35.0
+      affinity:
+        nodeAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            nodeSelectorTerms:
+            - matchExpressions:
+              - key: tks-msa
+                operator: In
+                values:
+                - enabled
+    storage:
+      type: cassandra
+      cassandra:
+        options:
+          servers: cassandra-dc-service.tks-msa.svc
+          keyspace: jaeger_v1_datacenter
+        dependencies:
+          enabled: true
+          image: harbor-cicd.taco-cat.xyz/tks/spark-dependencies:1.35.0
+    query:
+      image: harbor-cicd.taco-cat.xyz/tks/jaeger-query:1.35.0
+      basePath: /
+      affinity:
+        nodeAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            nodeSelectorTerms:
+            - matchExpressions:
+              - key: tks-msa
+                operator: In
+                values:
+                - enabled
+    agent:
+      image: harbor-cicd.taco-cat.xyz/tks/jaeger-agent:1.35.0
+    cassandra:
+      user:
+        enabled: true
+        username: tks
+        password: tksword
+      nodeSelector:
+        tks-msa: enabled
+    elasticsearch.user.enabled: false
+
+- name: kiali-operator
+  override:
+    image:
+      repo: harbor-cicd.taco-cat.xyz/tks/kiali-operator
+      tag: v1.63.0
+    nodeSelector: $(serviceMeshControlNodeSelector)
+
+- name: servicemesh-kiali-resource
+  override:
+    namespace: tks-msa
+    istioNamespace: tks-msa
+    deployment.namespace: tks-msa
+    deployment.image_name: harbor-cicd.taco-cat.xyz/tks/kiali
+    deployment.image_version: v1.63.0
+    deployment.resources.requests.cpu: 500m
+    deployment.resources.requests.memory: 512Mi
+    deployment.resources.limits.cpu: 1000m
+    deployment.resources.limits.memory: 1024Mi
+    deployment.nodeSelector:
+      tks-msa: enabled
+    auth.strategy: anonymous
+    externalServices.istio.configMapName: istio
+    externalServices.istio.istioIdentityDomain: svc.$(clusterName)
+    externalServices.prometheus.url: http://lma-prometheus.lma.svc:9090
+    externalServices.tracing.inClusterUrl: http://jaeger-operator-jaeger-query.tks-msa:16686
+    externalServices.tracing.url: https://jaeger-v2.taco-cat.xyz
+    externalServices.tracing.useGrpc: false
+    externalServices.grafana.auth.type: basic
+    externalServices.grafana.auth.username: admin
+    externalServices.grafana.auth.password: password
+    externalServices.grafana.inClusterUrl: http://grafana.lma.svc:80
+    externalServices.grafana.url: https://grafana-v2.taco-cat.xyz
+    server.webRoot: /
