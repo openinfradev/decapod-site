@@ -17,6 +17,13 @@ global:
 
   lokiHost: loki-loki-distributed-gateway
   lokiPort: 80
+  s3Host: minio.lma.svc
+  s3Port: 9000
+
+  grafanaDatasourceMetric: lma-prometheus.lma:9090
+  thanosQueryStores:
+  - thanos-storegateway:10901
+  - prometheus-operated:10901
 
   # servicemesh dashboard and grafana
   realms: 04a70f29
@@ -32,6 +39,7 @@ charts:
 
 - name: prometheus
   override:
+    kubeEtcd.enabled: true
     prometheus.prometheusSpec.storageSpec.volumeClaimTemplate.spec.storageClassName: $(storageClassName)
     prometheus.prometheusSpec.storageSpec.volumeClaimTemplate.spec.resources.requests.storage: 20Gi
     prometheus.prometheusSpec.retention: 2d
@@ -52,6 +60,7 @@ charts:
 - name: kube-state-metrics
   override:
     nodeSelector: $(nodeSelector)
+    kubeVersion: v1.25.7
 
 - name: prometheus-pushgateway
   override:
@@ -145,6 +154,9 @@ charts:
     serviceMonitor.jaeger.enabled: false
     prometheusRules.istio.aggregation.enabled: false
     prometheusRules.istio.optimization.enabled: false
+    grafanaDatasource.prometheus.url: $(grafanaDatasourceMetric)
+    # grafanaDatasource.prometheus.url: "thanos-query.lma:9090"
+    grafanaDatasource.loki.url: $(lokiHost):$(lokiPort)
 
 - name: prometheus-adapter
   override:
@@ -168,20 +180,41 @@ charts:
     conf.default.hosts:
     - "https://eck-elasticsearch-es-http.lma.svc.$(clusterName):9200"
 
+- name: minio
+  override:
+    users:
+      - accessKey: $(defaultUser)
+        secretKey: $(defaultPassword)
+        policy: consoleAdmin
+    buckets:
+      - name: thanos
+        policy: public
+        purge: false
+        versioning: true
+        objectlocking: false
+      - name: loki
+        policy: public
+        purge: false
+        versioning: true
+        objectlocking: false
+    persistence.storageClass: $(storageClassName)
+    persistence.size: 3000Gi
+    persistence.accessMode: ReadWriteOnce
+    service.type: LoadBalancer
+
 - name: thanos
   override:
     global.storageClass: $(storageClassName)
-    clusterDomain: $(clusterName)
+    # temporarily add annotation because a cluster is using not cluster-name but 'cluster.local'
+    # clusterDomain: $(clusterName)
     existingObjstoreSecret: $(thanosObjstoreSecret)
     query.nodeSelector: $(nodeSelector)
+    query.service.type: LoadBalancer
     queryFrontend.nodeSelector: $(nodeSelector)
     queryFrontend.service.type: NodePort
     queryFrontend.service.http.nodePort: 30007
-    querier.stores:
-    - prometheus-operated.lma.svc.$(clusterName):10901
-    bucketweb.enabled: $(thanosPrimaryCluster)
+    querier.stores: $(thanosQueryStores)
     bucketweb.nodeSelector: $(nodeSelector)
-    compactor.enabled: $(thanosPrimaryCluster)
     compactor.nodeSelector: $(nodeSelector)
     storegateway.nodeSelector: $(nodeSelector)
     compactor.persistence.size: 8Gi
@@ -189,23 +222,16 @@ charts:
     # - --compact.enable-vertical-compaction
     # - --deduplication.replica-label="replica"
     storegateway.persistence.size: 8Gi
-    ruler.enabled: $(thanosPrimaryCluster)
     ruler.nodeSelector: $(nodeSelector)
     ruler.alertmanagers:
-    - http://fed-master-alertmanager.lma.svc.$(clusterName):9093
+    - http://alertmanager-operated:9093
     ruler.persistence.size: 8Gi
-    minio.accessKey.password: $(defaultUser)
-    minio.secretKey.password: $(defaultPassword)
-    minio.defaultBuckets: thanos
-    minio.persistence.storageClass: $(storageClassName)
-    minio.persistence.accessMode: ReadWriteOnce
-    minio.persistence.size: 10Gi
 
 - name: thanos-config
   override:
     objectStorage:
       bucketName: thanos
-      endpoint: minio.lma.svc.$(clusterName):9000
+      endpoint: $(s3Host):$(s3Port)
       access_key: $(defaultUser)
       secret_key: $(defaultPassword)
       secretName: $(thanosObjstoreSecret)
@@ -225,3 +251,4 @@ charts:
 - name: loki
   override:
     global.dnsService: kube-dns
+    gateway.service.type: LoadBalancer
