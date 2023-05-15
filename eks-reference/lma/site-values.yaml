@@ -39,6 +39,8 @@ charts:
 
 - name: prometheus
   override:
+    kubeEtcd.enabled: false
+    prometheus.prometheusSpec.secrets: []  
     prometheus.prometheusSpec.storageSpec.volumeClaimTemplate.spec.storageClassName: $(storageClassName)
     prometheus.prometheusSpec.storageSpec.volumeClaimTemplate.spec.resources.requests.storage: 20Gi
     prometheus.prometheusSpec.retention: 2d
@@ -59,6 +61,7 @@ charts:
 - name: kube-state-metrics
   override:
     nodeSelector: $(nodeSelector)
+    kubeVersion: v1.25.7
 
 - name: prometheus-pushgateway
   override:
@@ -207,6 +210,7 @@ charts:
     # clusterDomain: $(clusterName)
     existingObjstoreSecret: $(thanosObjstoreSecret)
     query.nodeSelector: $(nodeSelector)
+    query.service.type: LoadBalancer
     queryFrontend.nodeSelector: $(nodeSelector)
     queryFrontend.service.type: NodePort
     queryFrontend.service.http.nodePort: 30007
