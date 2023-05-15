@@ -59,6 +59,7 @@ charts:
 - name: kube-state-metrics
   override:
     nodeSelector: $(nodeSelector)
+    kubeVersion: v1.25.7
 
 - name: prometheus-pushgateway
   override:
