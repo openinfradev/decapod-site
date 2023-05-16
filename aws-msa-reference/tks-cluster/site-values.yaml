@@ -108,3 +108,14 @@ charts:
       name:
       - tks-thanos
       - tks-loki
+
+- name: argo-rollouts
+  override:
+    controller:
+      nodeSelector:
+        taco-lma: enabled
+        replicas: 2
+        image:
+          registry: harbor-cicd.taco-cat.xyz
+          repository: tks/argo-rollouts
+          tag: v1.4.1
