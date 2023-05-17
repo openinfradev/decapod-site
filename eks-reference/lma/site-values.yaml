@@ -27,7 +27,7 @@ global:
 
   # servicemesh dashboard and grafana
   realms: 04a70f29
-  serviceDomain: taco-cat.xyz
+  grafanaDomain: taco-cat.xyz
   keycloakDomain: keycloak-eom.taco-cat.xyz
   grafanaClientSecret: JLtsanYtrCg21RGxrcVmQP0GeuDFUhpA
 
@@ -40,7 +40,7 @@ charts:
 - name: prometheus
   override:
     kubeEtcd.enabled: false
-    prometheus.prometheusSpec.secrets: []  
+    prometheus.prometheusSpec.secrets: []
     prometheus.prometheusSpec.storageSpec.volumeClaimTemplate.spec.storageClassName: $(storageClassName)
     prometheus.prometheusSpec.storageSpec.volumeClaimTemplate.spec.resources.requests.storage: 20Gi
     prometheus.prometheusSpec.retention: 2d
@@ -78,10 +78,10 @@ charts:
     persistence.storageClassName: $(storageClassName)
     sidecar.dashboards.searchNamespace: ALL
     # grafana oidc
-    service.type: ClusterIP
+    service.type: LoadBalancer
     grafana.ini.server:
-      domain: dashboard-$(realms).$(serviceDomain)
-      root_url: https://dashboard-$(realms).$(serviceDomain)/grafana
+      domain: $(grafanaDomain)
+      root_url: $(grafanaDomain)/grafana
       serve_from_sub_path: true
     grafana.ini.auth.generic_oauth:
       enabled: true

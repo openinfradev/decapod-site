@@ -27,7 +27,7 @@ global:
 
   # servicemesh dashboard and grafana
   realms: 04a70f29
-  serviceDomain: taco-cat.xyz
+  grafanaDomain: taco-cat.xyz
   keycloakDomain: keycloak-eom.taco-cat.xyz
   grafanaClientSecret: JLtsanYtrCg21RGxrcVmQP0GeuDFUhpA
 
@@ -77,10 +77,10 @@ charts:
     persistence.storageClassName: $(storageClassName)
     sidecar.dashboards.searchNamespace: ALL
     # grafana oidc
-    service.type: ClusterIP
+    service.type: LoadBalancer
     grafana.ini.server:
-      domain: dashboard-$(realms).$(serviceDomain)
-      root_url: https://dashboard-$(realms).$(serviceDomain)/grafana
+      domain: $(grafanaDomain)
+      root_url: $(grafanaDomain)/grafana
       serve_from_sub_path: true
     grafana.ini.auth.generic_oauth:
       enabled: true
@@ -227,7 +227,7 @@ charts:
     ruler.alertmanagers:
     - http://alertmanager-operated:9093
     ruler.persistence.size: 8Gi
-    ruler.config: 
+    ruler.config:
       groups:
         - name: "tks"
           rules:
@@ -272,7 +272,7 @@ charts:
               description: 현재 Disk 사용 추세기준 24시간 내에 Disk 용량이 꽉 찰것으로 예상됩니다. ({{ $labels.taco_cluster }} 클러스터, {{ $labels.persistentvolumeclaim }} PVC)
               Checkpoint: Disk 용량 최적화(삭제 및 Backup)을 수행하시길 권고합니다. 삭제할 내역이 없으면 증설 계획을 수립해 주십시요.
               summary: Disk resources of the volume(pvc) {{ $labels.persistentvolumeclaim }} are running low.
-              discriminative: $labels.taco_cluster, $labels.persistentvolumeclaim 
+              discriminative: $labels.taco_cluster, $labels.persistentvolumeclaim
             expr: predict_linear(kubelet_volume_stats_used_bytes[6h], 24*3600) > 1000000000 # kubelet_volume_stats_capacity_bytes
             for: 30m
             labels:
