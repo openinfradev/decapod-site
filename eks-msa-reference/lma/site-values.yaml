@@ -52,7 +52,18 @@ charts:
     alertmanager.alertmanagerSpec.alertmanagerConfigSelector.matchLabels.alertmanagerConfig: example
     alertmanager.alertmanagerSpec.nodeSelector: $(nodeSelector)
     alertmanager.alertmanagerSpec.retention: 2h
-    alertmanager.config.global.slack_api_url: https://hooks.slack.com/services/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
+    alertmanager.config:
+      receivers:
+      - name: tks-alert
+        webhook_configs:
+        - send_resolved: true
+          url: https://tks-console-dev.taco-cat.xyz/system-api/1.0/alerts
+      route:
+        group_by:
+        - alertname
+        group_wait: 10s
+        receiver: tks-alert
+        repeat_interval: 1h
 
 - name: prometheus-node-exporter
   override:
