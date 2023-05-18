@@ -20,6 +20,10 @@ global:
   s3Host: minio.lma.svc
   s3Port: 9000
 
+  TksWebhookUrl: "FixItByWF"
+  SlackUrl: "FixItByWF"
+  SlackChannel: '#temporary-alert'
+
   grafanaDatasourceMetric: lma-prometheus.lma:9090
   thanosQueryStores:
   - thanos-storegateway:10901
@@ -53,17 +57,44 @@ charts:
     alertmanager.alertmanagerSpec.nodeSelector: $(nodeSelector)
     alertmanager.alertmanagerSpec.retention: 2h
     alertmanager.config:
+      global:
+        slack_api_url: $(SlackUrl)
       receivers:
+      - name: slack-alert
+        slack_configs:
+        - channel: $(SlackChannel) #'#temporary-alert' #FIXME
+          send_resolved: true
+          text: |-
+            {{ if or (and (eq (len .Alerts.Firing) 1) (eq (len .Alerts.Resolved) 0)) (and (eq (len .Alerts.Firing) 0) (eq (len .Alerts.Resolved) 1)) }}
+              {{ range .Alerts.Firing }}{{ .Annotations.message }}{{ end }}{{ range .Alerts.Resolved }}{{ .Annotations.message }}{{ end }}
+            {{ else }}
+            {{ if gt (len .Alerts.Firing) 0 }}
+            *Alerts Firing:*
+              {{ range .Alerts.Firing }}- {{ .Labels.alertname }}: {{ .Annotations.message }}
+            {{ end }}{{ end }}
+            {{ if gt (len .Alerts.Resolved) 0 }}
+            *Alerts Resolved:*
+              {{ range .Alerts.Resolved }}- {{ .Labels.alertname }}: {{ .Annotations.message }}
+            {{ end }}{{ end }}
+            {{ end }}
+          title: '[{{ .Status | toUpper }}{{ if eq .Status "firing" }}:{{ .Alerts.Firing | len }}{{ end }}] {{ if or (and (eq (len .Alerts.Firing) 1) (eq (len .Alerts.Resolved) 0)) (and (eq (len .Alerts.Firing) 0) (eq (len .Alerts.Resolved) 1)) }} {{ range .Alerts.Firing }}{{ .Labels.alertname }}{{ end }}{{ range .Alerts.Resolved }}{{ .Labels.alertname }}{{ end }}{{ end }}'
+          username: Prometheus
       - name: tks-alert
         webhook_configs:
         - send_resolved: true
-          url: https://tks-console-dev.taco-cat.xyz/system-api/1.0/alerts
+          url: $(TksWebhookUrl)
       route:
         group_by:
         - alertname
         group_wait: 10s
         receiver: tks-alert
         repeat_interval: 1h
+        routes:
+        - group_by:
+          - alertname
+          match:
+            severity: critical
+          receiver: slack-alert
 
 - name: prometheus-node-exporter
   override:
