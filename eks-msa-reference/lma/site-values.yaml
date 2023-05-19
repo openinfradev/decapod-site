@@ -122,31 +122,29 @@ charts:
     sidecar.dashboards.searchNamespace: ALL
     # grafana oidc
     service.type: LoadBalancer
-    grafana.ini.server:
-      domain: $(grafanaDomain)
-      root_url: $(grafanaDomain)/grafana
-      serve_from_sub_path: true
-    grafana.ini.auth.generic_oauth:
-      enabled: true
-      name: keycloak
-      allow_sign_up: true
-      client_id: grafana
-      client_secret: $(grafanaClientSecret)
-      scopes: openid profile email
-      auth_url: https://$(keycloakDomain)/auth/realms/$(realms)/protocol/openid-connect/auth
-      token_url: https://$(keycloakDomain)/auth/realms/$(realms)/protocol/openid-connect/token
-      api_url: https://$(keycloakDomain)/auth/realms/$(realms)/protocol/openid-connect/userinfo
-    grafana.ini.auth:
-      disable_login_form: false
-      oauth_auto_login: true
-      disable_signout_menu: true
-    grafana.ini.security:
-      allow_embedding: true
-      cookie_secure: true
-      cookie_samesite: none
-    grafana.ini.user:
-      auto_assign_org: true
-      auto_assign_org_role: Admin
+    grafana\.ini:
+      server:
+        domain: $(grafanaDomain)
+        root_url: http://$(grafanaDomain)
+        serve_from_sub_path: true
+      auth.generic_oauth:
+        enabled: true
+        name: keycloak
+        allow_sign_up: true
+        client_id: grafana
+        client_secret: $(grafanaClientSecret)
+        scopes: openid profile email
+        login_attribute_path: username
+        auth_url: https://$(keycloakDomain)/auth/realms/$(realms)/protocol/openid-connect/auth
+        token_url: https://$(keycloakDomain)/auth/realms/$(realms)/protocol/openid-connect/token
+        api_url: https://$(keycloakDomain)/auth/realms/$(realms)/protocol/openid-connect/userinfo
+      auth:
+        disable_login_form: false
+        oauth_auto_login: true
+        disable_signout_menu: true
+      user:
+        auto_assign_org: true
+        auto_assign_org_role: Admin
 
 - name: fluent-operator
 
