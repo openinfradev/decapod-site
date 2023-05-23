@@ -87,3 +87,11 @@ charts:
   override:
     deployMgmtRbacOnly:
       targetNamespace: $(clusterName)
+
+- name: k8s-cluster-autoscaler
+  override:
+    image:
+      tag: v1.25.1
+    awsRegion: ap-northeast-2
+    autoDiscovery:
+      clusterName: $(clusterName)
