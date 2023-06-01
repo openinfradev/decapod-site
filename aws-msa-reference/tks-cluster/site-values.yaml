@@ -50,8 +50,8 @@ charts:
     - name: taco
       machineType: $(mpMachineType)
       replicas: $(mpReplicas)
-      minSize: 1
-      maxSize: 16
+      minSize: 3
+      maxSize: 3
       rootVolume:
         size: 200
         type: gp2
