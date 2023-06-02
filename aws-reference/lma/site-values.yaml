@@ -327,3 +327,8 @@ charts:
   override:
     global.dnsService: kube-dns
     gateway.service.type: LoadBalancer
+    ingester.persistence.storageClass: $(storageClassName)
+    distributor.persistence.storageClass: $(storageClassName)
+    queryFrontend.persistence.storageClass: $(storageClassName)
+    ruler.persistence.storageClass: $(storageClassName)
+    indexGateway.persistence.storageClass: $(storageClassName)
