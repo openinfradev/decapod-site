@@ -35,11 +35,19 @@ global:
   keycloakDomain: keycloak-eom.taco-cat.xyz
   grafanaClientSecret: JLtsanYtrCg21RGxrcVmQP0GeuDFUhpA
 
+  awsNlbAnnotation:
+    service.beta.kubernetes.io/aws-load-balancer-proxy-protocol: '*'
+    service.beta.kubernetes.io/aws-load-balancer-type: nlb
+
 charts:
 - name: prometheus-operator
   override:
     prometheusOperator.nodeSelector: $(nodeSelector)
     prometheusOperator.admissionWebhooks.patch.image.sha: ""
+    prometheusOperator.image.repository: tks/prometheus-operator
+    prometheusOperator.admissionWebhooks.patch.image.repository: tks/kube-webhook-certgen
+    prometheusOperator.prometheusConfigReloader.image.repository: tks/prometheus-config-reloader
+    prometheusOperator.thanosImage.repository: tks/thanos
 
 - name: prometheus
   override:
@@ -50,6 +58,7 @@ charts:
     prometheus.prometheusSpec.retention: 2d
     prometheus.prometheusSpec.externalLabels.taco_cluster: $(clusterName)
     prometheus.prometheusSpec.nodeSelector: $(nodeSelector)
+    prometheus.thanosServiceExternal.annotations: $(awsNlbAnnotation)
 
     alertmanager.service.type: NodePort
     alertmanager.service.nodePort: 30111
@@ -70,7 +79,6 @@ charts:
         group_wait: 10s
         receiver: tks-alert
         repeat_interval: 1h
-
 
 - name: prometheus-node-exporter
   override:
@@ -97,6 +105,7 @@ charts:
     sidecar.dashboards.searchNamespace: ALL
     # grafana oidc
     service.type: LoadBalancer
+    service.annotations: $(awsNlbAnnotation)
     grafana\.ini:
       server:
         domain: $(grafanaDomain)
@@ -219,6 +228,7 @@ charts:
     persistence.size: 3000Gi
     persistence.accessMode: ReadWriteOnce
     service.type: LoadBalancer
+    service.annotations: $(awsNlbAnnotation)
 
 - name: thanos
   override:
@@ -228,6 +238,7 @@ charts:
     existingObjstoreSecret: $(thanosObjstoreSecret)
     query.nodeSelector: $(nodeSelector)
     query.service.type: LoadBalancer
+    query.service.annotations: $(awsNlbAnnotation)
     queryFrontend.nodeSelector: $(nodeSelector)
     queryFrontend.service.type: NodePort
     queryFrontend.service.http.nodePort: 30007
@@ -330,6 +341,7 @@ charts:
   override:
     global.dnsService: kube-dns
     gateway.service.type: LoadBalancer
+    gateway.service.annotations: $(awsNlbAnnotation)
     ingester.persistence.storageClass: $(storageClassName)
     distributor.persistence.storageClass: $(storageClassName)
     queryFrontend.persistence.storageClass: $(storageClassName)
