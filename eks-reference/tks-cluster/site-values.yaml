@@ -91,7 +91,8 @@ charts:
 - name: k8s-cluster-autoscaler
   override:
     image:
-      tag: v1.25.1
+      tag: v1.25.2
+      repository: harbor-cicd.taco-cat.xyz/tks/cluster-autoscaler
     awsRegion: ap-northeast-2
     autoDiscovery:
       clusterName: $(clusterName)
