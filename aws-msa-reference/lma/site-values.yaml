@@ -31,6 +31,7 @@ global:
 
   # servicemesh dashboard and grafana
   realms: 04a70f29
+  consoleUrl: tks-console.taco-cat.xyz
   grafanaDomain: taco-cat.xyz
   keycloakDomain: keycloak-eom.taco-cat.xyz
   grafanaClientSecret: JLtsanYtrCg21RGxrcVmQP0GeuDFUhpA
@@ -111,6 +112,7 @@ charts:
         auth_url: https://$(keycloakDomain)/auth/realms/$(realms)/protocol/openid-connect/auth
         token_url: https://$(keycloakDomain)/auth/realms/$(realms)/protocol/openid-connect/token
         api_url: https://$(keycloakDomain)/auth/realms/$(realms)/protocol/openid-connect/userinfo
+        signout_redirect_url: $(consoleUrl)/login
       auth:
         disable_login_form: false
         oauth_auto_login: true
