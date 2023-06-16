@@ -36,6 +36,10 @@ global:
   keycloakDomain: keycloak-eom.taco-cat.xyz
   grafanaClientSecret: JLtsanYtrCg21RGxrcVmQP0GeuDFUhpA
 
+  awsNlbAnnotation:
+    service.beta.kubernetes.io/aws-load-balancer-proxy-protocol: '*'
+    service.beta.kubernetes.io/aws-load-balancer-type: nlb
+
 charts:
 - name: prometheus-operator
   override:
@@ -51,6 +55,7 @@ charts:
     prometheus.prometheusSpec.retention: 2d
     prometheus.prometheusSpec.externalLabels.taco_cluster: $(clusterName)
     prometheus.prometheusSpec.nodeSelector: $(nodeSelector)
+    prometheus.thanosServiceExternal.annotations: $(awsNlbAnnotation)
 
     alertmanager.service.type: NodePort
     alertmanager.service.nodePort: 30111
@@ -97,6 +102,7 @@ charts:
     sidecar.dashboards.searchNamespace: ALL
     # grafana oidc
     service.type: LoadBalancer
+    service.annotations: $(awsNlbAnnotation)
     grafana\.ini:
       server:
         domain: $(grafanaDomain)
@@ -220,6 +226,7 @@ charts:
     persistence.size: 3000Gi
     persistence.accessMode: ReadWriteOnce
     service.type: LoadBalancer
+    service.annotations: $(awsNlbAnnotation)
 
 - name: thanos
   override:
@@ -229,6 +236,7 @@ charts:
     existingObjstoreSecret: $(thanosObjstoreSecret)
     query.nodeSelector: $(nodeSelector)
     query.service.type: LoadBalancer
+    query.service.annotations: $(awsNlbAnnotation)
     queryFrontend.nodeSelector: $(nodeSelector)
     queryFrontend.service.type: LoadBalancer
     queryFrontend.enabled: true
@@ -338,6 +346,7 @@ charts:
   override:
     global.dnsService: kube-dns
     gateway.service.type: LoadBalancer
+    gateway.service.annotations: $(awsNlbAnnotation)
     ingester.persistence.storageClass: $(storageClassName)
     distributor.persistence.storageClass: $(storageClassName)
     queryFrontend.persistence.storageClass: $(storageClassName)
