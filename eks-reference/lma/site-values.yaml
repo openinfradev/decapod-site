@@ -223,7 +223,7 @@ charts:
         versioning: true
         objectlocking: false
     persistence.storageClass: $(storageClassName)
-    persistence.size: 3000Gi
+    persistence.size: 500Gi
     persistence.accessMode: ReadWriteOnce
     service.type: LoadBalancer
     service.annotations: $(awsNlbAnnotation)
