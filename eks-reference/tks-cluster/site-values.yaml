@@ -49,6 +49,8 @@ charts:
         taco-lma: enabled
         servicemesh: enabled
         taco-ingress-gateway: enabled
+      roleAdditionalPolicies:
+      - "arn:aws:iam::aws:policy/service-role/AmazonEBSCSIDriverPolicy"
     - name: normal
       machineType: $(mdMachineType)
       replicas: $(mdNumOfAz)
@@ -57,6 +59,8 @@ charts:
       rootVolume:
         size: 50
         type: gp2
+      roleAdditionalPolicies:
+      - "arn:aws:iam::aws:policy/service-role/AmazonEBSCSIDriverPolicy"
 
 - name: ingress-nginx
   override:
