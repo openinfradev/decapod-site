@@ -6,25 +6,25 @@ metadata:
 global:
   nodeSelector:
     taco-lma: enabled
-  clusterName: cluster.local
+  clusterName: siim-dev
   storageClassName: taco-storage
   repository: https://openinfradev.github.io/helm-repo/
   serviceScrapeInterval: 30s
-  defaultPassword: password
+  defaultPassword: tacoword
   defaultUser: taco
   thanosObjstoreSecret: taco-objstore-secret
 
   lokiHost: loki-loki-distributed-gateway
   lokiPort: 80
-  s3Service: "minio.lma.svc:9000" # depends on $lmaNameSpace (ex. minio.taco-system.svc)
+  s3Service: "minio.taco-system.svc:9000" # depends on $lmaNameSpace (ex. minio.taco-system.svc)
 
-  lmaNameSpace: lma
+  lmaNameSpace: taco-system
 
   TksWebhookUrl: "FixItByWF"
-  SlackUrl: "FixItByWF"
+  SlackUrl: https://hooks.slack.com/services/T0WU4JZEX/BGK2W2NUF/ #y2S2Y8FjfkbBs1eQ6u2Y6b8L #"FixItByWF"
   SlackChannel: '#temporary-alert'
 
-  grafanaDatasourceMetric: lma-prometheus:9090
+  grafanaDatasourceMetric: thanos-query-frontend:9090
   thanosQueryStores:
   - thanos-storegateway:10901
   - prometheus-operated:10901
@@ -64,7 +64,8 @@ charts:
     prometheus.prometheusSpec.podMonitorNamespaceSelector.matchLabels.name: $(lmaNameSpace)
     prometheus.prometheusSpec.ruleNamespaceSelector.matchLabels.name: $(lmaNameSpace)
     prometheus.thanosServiceExternal.annotations: $(awsNlbAnnotation)
-    prometheus.thanosServiceExternal.type: LoadBalancer
+    prometheus.thanosServiceExternal.type: NodePort
+    prometheus.thanosServiceExternal.NodePort: 30005
 
     alertmanager.service.type: NodePort
     alertmanager.service.nodePort: 30111
@@ -75,15 +76,33 @@ charts:
       global:
         slack_api_url: $(SlackUrl)
       receivers:
-      - name: tks-alert
-        webhook_configs:
+      - name: default-alert
+        slack_configs:
         - send_resolved: true
-          url: $(TksWebhookUrl)
+          channel: '#alert'
+          username: Prometheus
+          title: '{{ .Status | toUpper }}{{ if eq .Status "firing" }}:{{ .Alerts.Firing
+            | len }}{{ end }}] {{ if or (and (eq (len .Alerts.Firing) 1) (eq (len .Alerts.Resolved)
+            0)) (and (eq (len .Alerts.Firing) 0) (eq (len .Alerts.Resolved) 1)) }} {{ range
+            .Alerts.Firing }}{{ .Labels.alertname }}{{ end }}{{ range .Alerts.Resolved
+            }}{{ .Labels.alertname }}{{ end }}{{ end }}'
+          text: |-
+            {{ if or (and (eq (len .Alerts.Firing) 1) (eq (len .Alerts.Resolved) 0)) (and (eq (len .Alerts.Firing) 0) (eq (len .Alerts.Resolved) 1)) }} {{ range .Alerts.Firing }}{{ .Annotations.message }}{{ end }}{{ range .Alerts.Resolved }}{{ .Annotations.message  }}{{ end }}
+            {{ else }}
+            {{ if gt (len .Alerts.Firing) 0 }}
+            *Alerts Firing:*
+              {{ range .Alerts.Firing }}- {{ .Labels.alertname  }}: {{ .Annotations.message }}
+            {{ end }}{{ end }}
+            {{ if gt (len .Alerts.Resolved) 0 }}
+            *Alerts Resolved:*
+              {{ range .Alerts.Resolved }}- {{ .Labels.alertname }}: {{ .Annotations.message }}
+            {{ end }}{{ end }}
+            {{ end }}
       route:
         group_by:
         - alertname
         group_wait: 10s
-        receiver: tks-alert
+        receiver: default-alert
         repeat_interval: 1h
 
 - name: prometheus-node-exporter
@@ -106,11 +125,12 @@ charts:
 
 - name: grafana
   override:
-    adminPassword: password
+    adminPassword: tacoword
     persistence.storageClassName: $(storageClassName)
     sidecar.dashboards.searchNamespace: ALL
     # grafana oidc
-    service.type: LoadBalancer
+    service.type: NodePort
+
     service.annotations: $(awsNlbAnnotation)
     grafana\.ini:
       server:
@@ -129,10 +149,10 @@ charts:
         token_url: https://$(keycloakDomain)/auth/realms/$(realms)/protocol/openid-connect/token
         api_url: https://$(keycloakDomain)/auth/realms/$(realms)/protocol/openid-connect/userinfo
         signout_redirect_url: $(consoleUrl)/login
-      auth:
-        disable_login_form: false
-        oauth_auto_login: true
-        disable_signout_menu: true
+      # auth:
+      #   disable_login_form: false
+      #   oauth_auto_login: true
+      #   disable_signout_menu: true
       user:
         auto_assign_org: true
         auto_assign_org_role: Admin
@@ -220,6 +240,9 @@ charts:
 
 - name: minio
   override:
+    # rootUser: $(defaultUser)
+    # rootPassword: $(defaultPassword)
+    clusterDomain: $(clusterName)
     users:
       - accessKey: $(defaultUser)
         secretKey: $(defaultPassword)
@@ -238,24 +261,28 @@ charts:
     persistence.storageClass: $(storageClassName)
     persistence.size: 500Gi
     persistence.accessMode: ReadWriteOnce
-    service.type: LoadBalancer
+    service.type: ClusterIP
     service.annotations: $(awsNlbAnnotation)
+    customCommands:
+    - command: ilm rule add --expire-days 90 myminio/tks-thanos
+    - command: ilm rule add --expire-days 15 myminio/tks-loki
+    - command: ilm ls myminio/tks-thanos
+    - command: ilm ls myminio/tks-loki
     # deploy target node's label
     consoleIngress.nodeSelector: $(nodeSelector)
     postJob.nodeSelector: $(nodeSelector)
-
 
 - name: thanos
   override:
     global.storageClass: $(storageClassName)
     # temporarily add annotation because a cluster is using not cluster-name but 'cluster.local'
-    # clusterDomain: $(clusterName)
+    clusterDomain: $(clusterName)
     existingObjstoreSecret: $(thanosObjstoreSecret)
     query.nodeSelector: $(nodeSelector)
-    query.service.type: LoadBalancer
+    query.service.type: ClusterIP
     query.service.annotations: $(awsNlbAnnotation)
     queryFrontend.nodeSelector: $(nodeSelector)
-    queryFrontend.service.type: LoadBalancer
+    queryFrontend.service.type: ClusterIP
     queryFrontend.enabled: true
     queryFrontend.config: |-
         type: IN-MEMORY
@@ -357,15 +384,19 @@ charts:
     nodeSelector:
       "node-role.kubernetes.io/control-plane": ""
     tolerations:
-      - key: "node-role.kubernetes.io/control-plane"
-        effect: "NoSchedule"
-        operator: "Exists"
+    - key: "node-role.kubernetes.io/control-plane"
+      effect: "NoSchedule"
+      operator: "Exists"
+    - key: "node-role.kubernetes.io/master"
+      effect: "NoSchedule"
+      operator: "Exists"
+    deployer: "tacoplay"
 
 - name: loki
   override:
-    global.dnsService: kube-dns
-    # global.clusterDomain: $(clusterName) # annotate cluste because the cluster name is still cluster.local regardless cluster
-    gateway.service.type: LoadBalancer
+    global.dnsService: coredns
+    global.clusterDomain: $(clusterName)
+    gateway.service.type: ClusterIP
     gateway.service.annotations: $(awsNlbAnnotation)
     ingester.persistence.storageClass: $(storageClassName)
     distributor.persistence.storageClass: $(storageClassName)
@@ -399,3 +430,30 @@ charts:
     - name: $(clusterName)-tks-thanos
     - name: $(clusterName)-tks-loki
     tks.iamRoles: $(tksIamRoles)
+
+- name: eck-resource
+  override:
+    kibana.nodeSelector: $(nodeSelector)
+
+    elasticsearch.nodeSets.master.nodeSelector: $(nodeSelector)
+    elasticsearch.nodeSets.master.count: 3
+    elasticsearch.nodeSets.master.javaOpts: "-Xms1g -Xmx1g"
+    elasticsearch.nodeSets.master.limitCpu: 1
+    elasticsearch.nodeSets.master.limitMem: 2Gi
+    elasticsearch.nodeSets.master.pvc.storageClassName: $(storageClassName)
+    elasticsearch.nodeSets.master.pvc.size: 1Gi
+
+    elasticsearch.nodeSets.hotdata.nodeSelector: $(nodeSelector)
+    elasticsearch.nodeSets.hotdata.count: 3
+    elasticsearch.nodeSets.hotdata.javaOpts: "-Xms1g -Xmx1g"
+    elasticsearch.nodeSets.hotdata.limitCpu: 1
+    elasticsearch.nodeSets.hotdata.limitMem: 2Gi
+    elasticsearch.nodeSets.hotdata.pvc.storageClassName: $(storageClassName)
+    elasticsearch.nodeSets.hotdata.pvc.size: 10Gi
+
+    elasticsearch.nodeSets.client.enabled: false
+    elasticsearch.nodeSets.client.nodeSelector: $(nodeSelector)
+    elasticsearch.nodeSets.client.javaOpts: "-Xms10g -Xmx10g"
+    elasticsearch.nodeSets.client.limitCpu: 1
+    elasticsearch.nodeSets.client.limitMem: 20Gi
+    elasticsearch.nodeSets.client.pvc.storageClassName: $(storageClassName)
