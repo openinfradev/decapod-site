@@ -13,18 +13,19 @@ global:
   defaultPassword: password
   defaultUser: taco
   thanosObjstoreSecret: taco-objstore-secret
-  thanosPrimaryCluster: false
 
   lokiHost: loki-loki-distributed-gateway
   lokiPort: 80
-  s3Host: minio.lma.svc
+  s3Host: minio.lma.svc # depends on $lmaNameSpace (ex. minio.taco-system.svc)
   s3Port: 9000
+
+  lmaNameSapce: lma
 
   TksWebhookUrl: "FixItByWF"
   SlackUrl: "FixItByWF"
   SlackChannel: '#temporary-alert'
 
-  grafanaDatasourceMetric: lma-prometheus.lma:9090
+  grafanaDatasourceMetric: lma-prometheus:9090
   thanosQueryStores:
   - thanos-storegateway:10901
   - prometheus-operated:10901
@@ -45,6 +46,10 @@ charts:
   override:
     prometheusOperator.nodeSelector: $(nodeSelector)
     prometheusOperator.admissionWebhooks.patch.image.sha: ""
+    prometheusOperator.image.repository: tks/prometheus-operator
+    prometheusOperator.admissionWebhooks.patch.image.repository: tks/kube-webhook-certgen
+    prometheusOperator.prometheusConfigReloader.image.repository: tks/prometheus-config-reloader
+    prometheusOperator.thanosImage.repository: tks/thanos
 
 - name: prometheus
   override:
@@ -54,7 +59,11 @@ charts:
     prometheus.prometheusSpec.retention: 2d
     prometheus.prometheusSpec.externalLabels.taco_cluster: $(clusterName)
     prometheus.prometheusSpec.nodeSelector: $(nodeSelector)
+    prometheus.prometheusSpec.serviceMonitorNamespaceSelector.matchLabels.name: $(lmaNameSpace)
+    prometheus.prometheusSpec.podMonitorNamespaceSelector.matchLabels.name: $(lmaNameSpace)
+    prometheus.prometheusSpec.ruleNamespaceSelector.matchLabels.name: $(lmaNameSpace)
     prometheus.thanosServiceExternal.annotations: $(awsNlbAnnotation)
+    prometheus.thanosServiceExternal.type: LoadBalancer
 
     alertmanager.service.type: NodePort
     alertmanager.service.nodePort: 30111
@@ -150,7 +159,7 @@ charts:
         - index: platform
           loki_name: taco-loki
           key: $kubernetes['namespace_name']
-          value: kube-system|taco-system|lma|argo
+          value: kube-system|$(lmaNameSpace)|lma|argo
         parser: docker
         path: /var/log/containers/*.log
         type: kubernates
@@ -173,8 +182,12 @@ charts:
     serviceMonitor.additionalScrapeConfigs:
     grafanaDashboard.istio.enabled: false
     grafanaDashboard.jaeger.enabled: false
+    grafanaDashboard.namespace: $(lmaNameSpace)
+    grafanaDatasource.namespace: $(lmaNameSpace)
     serviceMonitor.istio.enabled: false
     serviceMonitor.jaeger.enabled: false
+    serviceMonitor.argocd.enabled: false
+    serviceMonitor.argowf.enabled: false
     prometheusRules.alert.enabled: false
     prometheusRules.istio.aggregation.enabled: false
     prometheusRules.istio.optimization.enabled: false
@@ -344,6 +357,7 @@ charts:
 - name: loki
   override:
     global.dnsService: kube-dns
+    global.clusterDomain: $(clusterName)
     gateway.service.type: LoadBalancer
     gateway.service.annotations: $(awsNlbAnnotation)
     ingester.persistence.storageClass: $(storageClassName)
@@ -351,3 +365,4 @@ charts:
     queryFrontend.persistence.storageClass: $(storageClassName)
     ruler.persistence.storageClass: $(storageClassName)
     indexGateway.persistence.storageClass: $(storageClassName)
+    loki.storageConfig.aws.s3: http://$(defaultUser):$(defaultPassword)@$(s3Host):$(s3Port)/minio
