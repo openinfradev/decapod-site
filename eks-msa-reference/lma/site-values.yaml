@@ -160,7 +160,7 @@ charts:
         - index: platform
           loki_name: taco-loki
           key: $kubernetes['namespace_name']
-          value: kube-system|$(lmaNameSpace)|lma|argo
+          value: kube-system|$(lmaNameSpace)|taco-system|argo
         parser: docker
         path: /var/log/containers/*.log
         type: kubernates
@@ -240,6 +240,10 @@ charts:
     persistence.accessMode: ReadWriteOnce
     service.type: LoadBalancer
     service.annotations: $(awsNlbAnnotation)
+    # deploy target node's label
+    consoleIngress.nodeSelector: $(nodeSelector)
+    postJob.nodeSelector: $(nodeSelector)
+
 
 - name: thanos
   override:
@@ -367,3 +371,18 @@ charts:
     ruler.persistence.storageClass: $(storageClassName)
     indexGateway.persistence.storageClass: $(storageClassName)
     loki.storageConfig.aws.s3: http://$(defaultUser):$(defaultPassword)@$(s3Host):$(s3Port)/minio
+    # select target node's label
+    ingester.nodeSelector: $(nodeSelector)
+    distributor.nodeSelector: $(nodeSelector)
+    querier.nodeSelector: $(nodeSelector)
+    queryFrontend.nodeSelector: $(nodeSelector)
+    queryScheduler.nodeSelector: $(nodeSelector)
+    tableManager.nodeSelector: $(nodeSelector)
+    gateway.nodeSelector: $(nodeSelector)
+    compactor.nodeSelector: $(nodeSelector)
+    ruler.nodeSelector: $(nodeSelector)
+    indexGateway.nodeSelector: $(nodeSelector)
+    memcachedChunks.nodeSelector: $(nodeSelector)
+    memcachedFrontend.nodeSelector: $(nodeSelector)
+    memcachedIndexQueries.nodeSelector: $(nodeSelector)
+    memcachedIndexWrites.nodeSelector: $(nodeSelector)
