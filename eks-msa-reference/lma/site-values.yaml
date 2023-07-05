@@ -19,7 +19,7 @@ global:
   s3Host: minio.lma.svc # depends on $lmaNameSpace (ex. minio.taco-system.svc)
   s3Port: 9000
 
-  lmaNameSapce: lma
+  lmaNameSpace: lma
 
   TksWebhookUrl: "FixItByWF"
   SlackUrl: "FixItByWF"
