@@ -361,7 +361,7 @@ charts:
 - name: loki
   override:
     global.dnsService: kube-dns
-    global.clusterDomain: $(clusterName)
+    # global.clusterDomain: $(clusterName) # annotate cluste because the cluster name is still cluster.local regardless cluster
     gateway.service.type: LoadBalancer
     gateway.service.annotations: $(awsNlbAnnotation)
     ingester.persistence.storageClass: $(storageClassName)
