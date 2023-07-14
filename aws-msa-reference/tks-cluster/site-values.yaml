@@ -17,6 +17,7 @@ global:
   mpMachineType: CHANGEME
   awsAccountID: CHANGEME
   cloudAccountID: CHANGEME
+  awsUserId: CHANGEME
 charts:
 - name: cluster-api-aws
   override:
@@ -103,14 +104,6 @@ charts:
     deployMgmtRbacOnly:
       targetNamespace: $(clusterName)
 
-- name: ack-resources
-  override:
-    s3:
-      enabled: true
-      name:
-      - tks-thanos
-      - tks-loki
-
 - name: argo-rollouts
   override:
     controller:
@@ -121,3 +114,4 @@ charts:
         registry: harbor-cicd.taco-cat.xyz
         repository: tks/argo-rollouts
         tag: v1.4.1
+
