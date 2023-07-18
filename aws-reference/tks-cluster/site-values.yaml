@@ -59,6 +59,8 @@ charts:
         taco-lma: enabled
         servicemesh: enabled
         taco-ingress-gateway: enabled
+      roleAdditionalPolicies:
+      - "arn:aws:iam::aws:policy/AmazonS3FullAccess"
     machineDeployment:
     - name: normal
       numberOfAZ: $(mdNumOfAz)
