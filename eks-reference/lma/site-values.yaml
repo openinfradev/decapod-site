@@ -342,11 +342,13 @@ charts:
 - name: thanos-config
   override:
     objectStorage:
-      bucketName: thanos
-      endpoint: $(s3Service)
-      access_key: $(defaultUser)
-      secret_key: $(defaultPassword)
       secretName: $(thanosObjstoreSecret)
+      rawConfig:
+        bucket: tks-thanos
+        endpoint: $(s3Service)
+        access_key: $(defaultUser)
+        secret_key: $(defaultPassword)
+        insecure: true
     sidecarsService.name: thanos-sidecars
     sidecarsService.endpoints:
       - 192.168.97.102 # should not be in the loopback range (127.0.0.0/8)
