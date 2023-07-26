@@ -16,8 +16,7 @@ global:
 
   lokiHost: loki-loki-distributed-gateway
   lokiPort: 80
-  s3Host: minio.lma.svc # depends on $lmaNameSpace (ex. minio.taco-system.svc)
-  s3Port: 9000
+  s3Service: "minio.lma.svc:9000" # depends on $lmaNameSpace (ex. minio.taco-system.svc)
 
   lmaNameSpace: lma
 
@@ -40,6 +39,8 @@ global:
   awsNlbAnnotation:
     service.beta.kubernetes.io/aws-load-balancer-proxy-protocol: '*'
     service.beta.kubernetes.io/aws-load-balancer-type: nlb
+
+  tksIamRoles: []
 
 charts:
 - name: prometheus-operator
@@ -341,11 +342,13 @@ charts:
 - name: thanos-config
   override:
     objectStorage:
-      bucketName: thanos
-      endpoint: $(s3Host):$(s3Port)
-      access_key: $(defaultUser)
-      secret_key: $(defaultPassword)
       secretName: $(thanosObjstoreSecret)
+      rawConfig:
+        bucket: tks-thanos
+        endpoint: $(s3Service)
+        access_key: $(defaultUser)
+        secret_key: $(defaultPassword)
+        insecure: true
     sidecarsService.name: thanos-sidecars
     sidecarsService.endpoints:
       - 192.168.97.102 # should not be in the loopback range (127.0.0.0/8)
@@ -370,7 +373,6 @@ charts:
     queryFrontend.persistence.storageClass: $(storageClassName)
     ruler.persistence.storageClass: $(storageClassName)
     indexGateway.persistence.storageClass: $(storageClassName)
-    loki.storageConfig.aws.s3: http://$(defaultUser):$(defaultPassword)@$(s3Host):$(s3Port)/minio
     # select target node's label
     ingester.nodeSelector: $(nodeSelector)
     distributor.nodeSelector: $(nodeSelector)
@@ -386,3 +388,15 @@ charts:
     memcachedFrontend.nodeSelector: $(nodeSelector)
     memcachedIndexQueries.nodeSelector: $(nodeSelector)
     memcachedIndexWrites.nodeSelector: $(nodeSelector)
+    loki:
+      storageConfig:
+        aws:
+          s3: http://$(defaultUser):$(defaultPassword)@$(s3Service)/minio
+
+- name: lma-bucket
+  override:
+    s3.enabled: true
+    s3.buckets:
+    - name: $(clusterName)-tks-thanos
+    - name: $(clusterName)-tks-loki
+    tks.iamRoles: $(tksIamRoles)
