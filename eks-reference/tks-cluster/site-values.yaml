@@ -35,7 +35,8 @@ charts:
       multitenancyId:
         kind: AWSClusterRoleIdentity
         name: $(cloudAccountID)-account-role
-      bastion.enabled: false
+      bastion:
+        enabled: false
     machinePool:
     - name: taco
       machineType: $(mpMachineType)
@@ -50,6 +51,7 @@ charts:
         servicemesh: enabled
         taco-ingress-gateway: enabled
       roleAdditionalPolicies:
+      - "arn:aws:iam::aws:policy/AmazonS3FullAccess"
       - "arn:aws:iam::aws:policy/service-role/AmazonEBSCSIDriverPolicy"
     - name: normal
       machineType: $(mdMachineType)
