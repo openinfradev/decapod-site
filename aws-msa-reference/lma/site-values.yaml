@@ -397,7 +397,5 @@ charts:
     s3.enabled: true
     s3.buckets:
     - name: $(clusterName)-tks-thanos
-      versioning: Disabled
     - name: $(clusterName)-tks-loki
-      versioning: Disabled
     tks.iamRoles: $(tksIamRoles)
