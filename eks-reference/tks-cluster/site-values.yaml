@@ -35,7 +35,8 @@ charts:
       multitenancyId:
         kind: AWSClusterRoleIdentity
         name: $(cloudAccountID)-account-role
-      bastion.enabled: false
+      bastion:
+        enabled: false
     machinePool:
     - name: taco
       machineType: $(mpMachineType)
@@ -97,7 +98,7 @@ charts:
   override:
     image:
       tag: v1.25.2
-      repository: harbor-cicd.taco-cat.xyz/tks/cluster-autoscaler
+      repository: harbor.taco-cat.xyz/tks/cluster-autoscaler
     awsRegion: ap-northeast-2
     autoDiscovery:
       clusterName: $(clusterName)
