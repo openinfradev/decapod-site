@@ -79,10 +79,6 @@ charts:
     controller:
       nodeSelector:
         taco-lma: enabled
-      resources:
-        requests:
-          cpu: 2000m
-          memory: 4Gi
       service:
         externalTrafficPolicy: Local
         annotations:
