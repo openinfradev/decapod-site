@@ -9,14 +9,18 @@ global:
   sshKeyName: CHANGEME
   clusterRegion: CHANGEME
   mdNumOfAz: CHANGEME
-  mdMinSizePerAz: CHANGEME
-  mdMaxSizePerAz: CHANGEME
-  mdMachineType: CHANGEME
   cpReplicas: CHANGEME
-  mpReplicas: CHANGEME
-  mpMachineType: CHANGEME
-  awsAccountID: CHANGEME
   cloudAccountID: CHANGEME
+
+  tksInfraNode: CHNAGEME
+  tksInfraNodeMax: CHANGEME
+  tksInfraNodeType: CHANGEME
+  tksUserNode: CHANGEME
+  tksUserNodeMax: CHANGEME
+  tksUserNodeType: CHANGEME
+  # 노드 스탑을 위해서는 min은 항상 0
+  # 승규님 의견 추가: machine pool 노드에 축소불가설정 필요
+
 charts:
 - name: cluster-api-aws
   override:
@@ -48,10 +52,10 @@ charts:
       replicas: $(cpReplicas)
     machinePool:
     - name: taco
-      machineType: $(mpMachineType)
-      replicas: $(mpReplicas)
-      minSize: 3
-      maxSize: 3
+      machineType: $(tksInfraNodeType)
+      replicas: $(tksInfraNode)
+      minSize: 0
+      maxSize: $(tksInfraNodeMax)
       rootVolume:
         size: 200
         type: gp2
@@ -64,11 +68,11 @@ charts:
     machineDeployment:
     - name: normal
       numberOfAZ: $(mdNumOfAz)
-      minSizePerAZ: $(mdMinSizePerAz)
-      maxSizePerAZ: $(mdMaxSizePerAz)
+      minSizePerAZ: 0 # $(tksUserNode)?
+      maxSizePerAZ: $(tksUserNodeMax)
       selector:
         matchLabels:
-      machineType: $(mdMachineType)
+      machineType: $(tksUserNodeType)
       rootVolume:
         size: 50
         type: gp2
