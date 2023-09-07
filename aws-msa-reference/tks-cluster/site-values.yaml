@@ -8,10 +8,11 @@ global:
   clusterName: cluster.local
   sshKeyName: CHANGEME
   clusterRegion: CHANGEME
-  mdNumOfAz: CHANGEME
-  cpReplicas: CHANGEME
   cloudAccountID: CHANGEME
 
+  tksCpNode: CHNAGEME
+  tksCpNodeMax: CHANGEME
+  tksCpNodeType: CHANGEME
   tksInfraNode: CHNAGEME
   tksInfraNodeMax: CHANGEME
   tksInfraNodeType: CHANGEME
@@ -49,7 +50,7 @@ charts:
             toPort: 5473
       bastion.enabled: false
     kubeadmControlPlane:
-      replicas: $(cpReplicas)
+      replicas: $(tksCpNode)
     machinePool:
     - name: taco
       machineType: $(tksInfraNodeType)
@@ -65,17 +66,16 @@ charts:
         taco-ingress-gateway: enabled
       roleAdditionalPolicies:
       - "arn:aws:iam::aws:policy/AmazonS3FullAccess"
-    machineDeployment:
     - name: normal
-      numberOfAZ: $(mdNumOfAz)
-      minSizePerAZ: 0 # $(tksUserNode)?
-      maxSizePerAZ: $(tksUserNodeMax)
-      selector:
-        matchLabels:
       machineType: $(tksUserNodeType)
+      replicas: $(tksUserNode)
+      minSize: 0
+      maxSize: $(tksUserNodeMax)
       rootVolume:
         size: 50
         type: gp2
+      roleAdditionalPolicies:
+      - "arn:aws:iam::aws:policy/service-role/AmazonEBSCSIDriverPolicy"
 
 - name: ingress-nginx
   override:

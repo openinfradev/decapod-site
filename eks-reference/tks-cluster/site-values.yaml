@@ -10,6 +10,9 @@ global:
   clusterRegion: CHANGEME
   cloudAccountID: CHANGEME
 
+  tksCpNode: CHNAGEME
+  tksCpNodeMax: CHANGEME
+  tksCpNodeType: CHANGEME
   tksInfraNode: CHNAGEME
   tksInfraNodeMax: CHANGEME
   tksInfraNodeType: CHANGEME
