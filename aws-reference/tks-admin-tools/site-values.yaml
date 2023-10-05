@@ -44,6 +44,9 @@ charts:
 - name: harbor
   override:
     expose:
+      tls:
+        secret:
+          secretName: TO_BE_FIXED
       ingress:
         hosts:
           core: TO_BE_FIXED
