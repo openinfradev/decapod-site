@@ -76,6 +76,7 @@ charts:
       external:
         host: $(dbHost)  
         password: $(commonPassword)
+        sslmode: "require"
     core:
       replicas: 2  
     jobservice:
