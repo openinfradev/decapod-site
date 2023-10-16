@@ -9,7 +9,9 @@ global:
 charts:
 - name: cluster-api-byoh
   override:
-    cluster.name: $(clusterName)
+    cluster:
+      name: $(clusterName)
+      kubernetesVersion: v1.25.11
     machineDeployment:
     - name: taco
       replicas: 1
