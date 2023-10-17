@@ -12,12 +12,16 @@ charts:
     cluster:
       name: $(clusterName)
       kubernetesVersion: v1.25.11
+    kubeadmControlPlane:
+      selector:
+        matchLabels:
+          role: $(clusterName)-control-plane
     machineDeployment:
     - name: taco
       replicas: 1
       selector:
         matchLabels:
-          role: tks
+          role: $(clusterName)-tks
       labels:
         servicemesh: enabled
         taco-egress-gateway: enabled
@@ -25,12 +29,9 @@ charts:
         taco-lma: enabled
     - name: normal
       replicas: 1
-      autoscaling:
-        minSize: 1
-        maxSize: 5
       selector:
         matchLabels:
-          role: worker
+          role: $(clusterName)-worker
 
 - name: ingress-nginx
   override:
