@@ -6,12 +6,19 @@ metadata:
 global:
   # These values are replaced on cluster creation by workflow
   clusterName: cluster.local
+  clusterEndpointHost: CHANGEME
+  clusterEndpointPort: CHANGEME
 charts:
 - name: cluster-api-byoh
   override:
     cluster:
       name: $(clusterName)
       kubernetesVersion: v1.25.11
+    byoCluster:
+      bundleLookupBaseRegistry: harbor.taco-cat.xyz/cluster_api_provider_bringyourownhost
+      controlPlaneEndpoint:
+        host: $(clusterEndpointHost)
+        port: $(clusterEndpointPort)
     kubeadmControlPlane:
       selector:
         matchLabels:
