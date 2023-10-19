@@ -8,6 +8,9 @@ global:
   clusterName: cluster.local
   clusterEndpointHost: CHANGEME
   clusterEndpointPort: CHANGEME
+  tksCpNode: CHNAGEME
+  tksInfraNode: CHNAGEME
+  tksUserNode: CHANGEME
 charts:
 - name: cluster-api-byoh
   override:
@@ -23,9 +26,10 @@ charts:
       selector:
         matchLabels:
           role: $(clusterName)-control-plane
+      replicas: $(tksCpNode)
     machineDeployment:
     - name: taco
-      replicas: 1
+      replicas: $(tksInfraNode)
       selector:
         matchLabels:
           role: $(clusterName)-tks
@@ -35,7 +39,7 @@ charts:
         taco-ingress-gateway: enabled
         taco-lma: enabled
     - name: normal
-      replicas: 1
+      replicas: $(tksUserNode)
       selector:
         matchLabels:
           role: $(clusterName)-worker
