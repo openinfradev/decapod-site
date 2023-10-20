@@ -106,7 +106,24 @@ charts:
       minReplicas: 1
       maxReplicas: 5
       targetCPUUtilizationPercentage: 80
-    service.type: NodePort
+    service:
+      type: NodePort
+      ports:
+      - name: status-port
+        port: 15021
+        protocol: TCP
+        targetPort: 15021
+        nodePort: 30013
+      - name: http2
+        port: 80
+        protocol: TCP
+        targetPort: 80
+        nodePort: 30014
+      - name: https
+        port: 443
+        protocol: TCP
+        targetPort: 443
+        nodePort: 30015
     #resources.requests.cpu: 1000m
     #resources.requests.memory: 1024Mi
     #resources.limits.cpu: 2000m
