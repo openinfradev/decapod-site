@@ -6,29 +6,43 @@ metadata:
 global:
   # These values are replaced on cluster creation by workflow
   clusterName: cluster.local
+  clusterEndpointHost: CHANGEME
+  clusterEndpointPort: CHANGEME
+  tksCpNode: CHNAGEME
+  tksInfraNode: CHNAGEME
+  tksUserNode: CHANGEME
 charts:
 - name: cluster-api-byoh
   override:
-    cluster.name: $(clusterName)
-    machineDeployment:
-    - name: taco
-      replicas: 1
+    cluster:
+      name: $(clusterName)
+      kubernetesVersion: v1.25.11
+    byoCluster:
+      bundleLookupBaseRegistry: harbor.taco-cat.xyz/cluster_api_provider_bringyourownhost
+      controlPlaneEndpoint:
+        host: $(clusterEndpointHost)
+        port: $(clusterEndpointPort)
+    kubeadmControlPlane:
       selector:
         matchLabels:
-          role: tks
+          role: $(clusterName)-control-plane
+      replicas: $(tksCpNode)
+    machineDeployment:
+    - name: taco
+      replicas: $(tksInfraNode)
+      selector:
+        matchLabels:
+          role: $(clusterName)-tks
       labels:
         servicemesh: enabled
         taco-egress-gateway: enabled
         taco-ingress-gateway: enabled
         taco-lma: enabled
     - name: normal
-      replicas: 1
-      autoscaling:
-        minSize: 1
-        maxSize: 5
+      replicas: $(tksUserNode)
       selector:
         matchLabels:
-          role: worker
+          role: $(clusterName)-worker
 
 - name: ingress-nginx
   override:

@@ -225,12 +225,12 @@ charts:
         secretKey: $(defaultPassword)
         policy: consoleAdmin
     buckets:
-      - name: thanos
+      - name: tks-thanos
         policy: public
         purge: false
         versioning: true
         objectlocking: false
-      - name: loki
+      - name: tks-loki
         policy: public
         purge: false
         versioning: true
@@ -355,9 +355,9 @@ charts:
 - name: prepare-etcd-secret
   override:
     nodeSelector:
-      "node-role.kubernetes.io/master": ""
+      "node-role.kubernetes.io/control-plane": ""
     tolerations:
-      - key: "node-role.kubernetes.io/master"
+      - key: "node-role.kubernetes.io/control-plane"
         effect: "NoSchedule"
         operator: "Exists"
 

@@ -8,14 +8,20 @@ global:
   clusterName: cluster.local
   sshKeyName: CHANGEME
   clusterRegion: CHANGEME
-  mdNumOfAz: CHANGEME
-  mdMinSizePerAz: CHANGEME
-  mdMaxSizePerAz: CHANGEME
-  mdMachineType: CHANGEME
-  cpReplicas: CHANGEME
-  mpReplicas: CHANGEME
-  mpMachineType: CHANGEME
   cloudAccountID: CHANGEME
+
+  tksCpNode: CHNAGEME
+  tksCpNodeMax: CHANGEME
+  tksCpNodeType: CHANGEME
+  tksInfraNode: CHNAGEME
+  tksInfraNodeMax: CHANGEME
+  tksInfraNodeType: CHANGEME
+  tksUserNode: CHANGEME
+  tksUserNodeMax: CHANGEME
+  tksUserNodeType: CHANGEME
+  # 노드 스탑을 위해서는 min은 항상 0
+  # 승규님 의견 추가: machine pool 노드에 축소불가설정 필요
+
 charts:
 - name: cluster-api-aws
   override:
@@ -39,10 +45,10 @@ charts:
         enabled: false
     machinePool:
     - name: taco
-      machineType: $(mpMachineType)
-      replicas: $(mpReplicas)
-      minSize: 3
-      maxSize: 3
+      machineType: $(tksInfraNodeType)
+      replicas: $(tksInfraNode)
+      minSize: 0
+      maxSize: $(tksInfraNodeMax)
       rootVolume:
         size: 200
         type: gp2
@@ -54,10 +60,10 @@ charts:
       - "arn:aws:iam::aws:policy/AmazonS3FullAccess"
       - "arn:aws:iam::aws:policy/service-role/AmazonEBSCSIDriverPolicy"
     - name: normal
-      machineType: $(mdMachineType)
-      replicas: $(mdNumOfAz)
-      minSize: $(mdMinSizePerAz)
-      maxSize: $(mdMaxSizePerAz)
+      machineType: $(tksUserNodeType)
+      replicas: $(tksUserNode)
+      minSize: 0
+      maxSize: $(tksUserNodeMax)
       rootVolume:
         size: 50
         type: gp2
@@ -69,10 +75,6 @@ charts:
     controller:
       nodeSelector:
         taco-lma: enabled
-      resources:
-        requests:
-          cpu: 2000m
-          memory: 4Gi
       service:
         externalTrafficPolicy: Local
         annotations:
@@ -97,8 +99,8 @@ charts:
 - name: k8s-cluster-autoscaler
   override:
     image:
-      tag: v1.25.2
       repository: harbor.taco-cat.xyz/tks/cluster-autoscaler
+      tag: v1.25.2
     awsRegion: ap-northeast-2
     autoDiscovery:
       clusterName: $(clusterName)
