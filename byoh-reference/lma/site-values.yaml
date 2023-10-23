@@ -228,12 +228,12 @@ charts:
         secretKey: $(defaultPassword)
         policy: consoleAdmin
     buckets:
-      - name: thanos
+      - name: tks-thanos
         policy: public
         purge: false
         versioning: true
         objectlocking: false
-      - name: loki
+      - name: tks-loki
         policy: public
         purge: false
         versioning: true
