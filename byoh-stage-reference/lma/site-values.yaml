@@ -3,6 +3,20 @@ kind: HelmValuesTransformer
 metadata:
   name: site
 
+# 대상환경의 정보를 넣는 부분 (btv경우)
+# - clusterName 이건 tks-api가 해줄꺼 같음
+# - s3Service 이것도 tks-api가 해줄꺼고 ep secret을 잘 넣어줘야함
+# - lmaNameSpace 이건 그냥 하던대로 놓는걸로..
+# - grafanaDatasourceMetric 이것도 ep secret
+# ......
+# - kafka 정보가 들어오면 이것도 추가해 수정필요, 예시 형태로 추가해둠, 'name: fluentbit' 검색된 블록에 주석부분 확인
+# - kafka로 보내기는 routing 없이 모두다 kafka에 싣습니다.
+# ============================================================================
+# 환경에 맞추어 다음과 같이 수정해둠
+# minio에 2000GB 할당, 이전에 es에 3개의 데이터 노드에 그렇게 돼있던걸로 생각해 설정했으나 그렇지 않다면 변경필요 -> 'name: minio' 검색된 블록에서 persistance 부분
+# 위 내역을 수정하면 적절하게 subcommand 부분도 수정해야함
+# 현제 설정은 매트릭 7일, 로그 2일 보관
+
 global:
   nodeSelector:
     taco-lma: enabled
@@ -151,6 +165,11 @@ charts:
         - name: taco-loki
           host: $(lokiHost)
           port: $(lokiPort)
+        # kafka:
+        #   enabled: true
+        #   broker: btv-kafka-0.my-kafka-headless.lma.svc.cluster.local:9092,
+        #   topics: taco
+
       targetLogs:
       - tag: kube.*
         bufferChunkSize: 2M
@@ -239,7 +258,7 @@ charts:
         versioning: true
         objectlocking: false
     persistence.storageClass: $(storageClassName)
-    persistence.size: 500Gi
+    persistence.size: 2000Gi
     persistence.accessMode: ReadWriteOnce
     service:
       type: NodePort
@@ -248,7 +267,11 @@ charts:
     # deploy target node's label
     consoleIngress.nodeSelector: $(nodeSelector)
     postJob.nodeSelector: $(nodeSelector)
-
+    customCommands:
+    - command: ilm rule add --expire-days 7 myminio/tks-thanos
+    - command: ilm rule add --expire-days 2 myminio/tks-loki
+    - command: ilm ls myminio/tks-thanos
+    - command: ilm ls myminio/tks-loki
 
 - name: thanos
   override:
