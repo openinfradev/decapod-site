@@ -28,6 +28,7 @@ charts:
     sshKeyName: $(sshKeyName)
     cluster:
       name: $(clusterName)
+      kubernetesVersion: v1.26.10
       eksEnabled: false
       multitenancyId:
         kind: AWSClusterRoleIdentity
@@ -95,8 +96,17 @@ charts:
 
 - name: cluster-autoscaler
   override:
-    discoveryNamespace: $(clusterName)
-    discoveryClusterName: $(clusterName)
+    image:
+      repository: harbor.taco-cat.xyz/tks/cluster-autoscaler
+      tag: v1.26.4
+    autoDiscovery:
+      clusterName: $(clusterName)
+      labels:
+        - namespace: $(clusterName)
+    cloudProvider: clusterapi
+    clusterAPICloudConfigPath: /etc/kubernetes/mgmt-kubeconfig
+    clusterAPIKubeconfigSecret: "mgmt-kubeconfig"
+    clusterAPIMode: incluster-kubeconfig
 
 - name: cluster-autoscaler-rbac
   override:
