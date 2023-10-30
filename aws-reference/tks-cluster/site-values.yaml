@@ -104,7 +104,7 @@ charts:
       labels:
         - namespace: $(clusterName)
     cloudProvider: clusterapi
-    clusterAPICloudConfigPath: /etc/kubernetes/mgmt-kubeconfig
+    clusterAPICloudConfigPath: /etc/kubernetes/kubeconfig
     clusterAPIKubeconfigSecret: "mgmt-kubeconfig"
     clusterAPIMode: incluster-kubeconfig
 
