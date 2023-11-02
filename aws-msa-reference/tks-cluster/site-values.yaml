@@ -50,6 +50,7 @@ charts:
             fromPort: 5473
             toPort: 5473
       bastion.enabled: false
+      baseOS: ubuntu-22.04
     kubeadmControlPlane:
       replicas: $(tksCpNode)
     machinePool:
