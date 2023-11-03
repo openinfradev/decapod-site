@@ -18,7 +18,7 @@ global:
   keycloakIssuerUri: https://keycloak.com/auth/realms/oraganization
   keycloakClientPrefix: client-prefix
   gatekeeperSecret: gatekeeper-secret
-  
+
 charts:
 - name: cert-manager
   override:
@@ -250,7 +250,7 @@ charts:
     externalServices.grafana.url: https://grafana-v2.taco-cat.xyz
     server.webRoot: /
 
-- name: keycloak-gatekeeper
+- name: gatekeeper
   override:
     config:
       discovery-url: $(keycloakIssuerUri)
