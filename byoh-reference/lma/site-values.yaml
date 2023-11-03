@@ -261,8 +261,10 @@ charts:
     query.service.annotations: $(awsNlbAnnotation)
     queryFrontend.nodeSelector: $(nodeSelector)
     queryFrontend.service:
+      http:
+        port: 9090
+        nodePort: 30005
       type: NodePort
-      nodePort: 30005
     queryFrontend.enabled: true
     queryFrontend.config: |-
         type: IN-MEMORY
