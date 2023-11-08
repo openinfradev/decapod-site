@@ -10,9 +10,8 @@ global:
   clusterRegion: CHANGEME
   cloudAccountID: CHANGEME
 
-  tksCpNode: CHNAGEME
-  tksCpNodeMax: CHANGEME
-  tksCpNodeType: CHANGEME
+  tksCpNode: 3
+  tksCpNodeType: m6i.2xlarge
   tksInfraNode: CHNAGEME
   tksInfraNodeMax: CHANGEME
   tksInfraNodeType: CHANGEME
@@ -28,6 +27,7 @@ charts:
     sshKeyName: $(sshKeyName)
     cluster:
       name: $(clusterName)
+      kubernetesVersion: v1.26.10
       eksEnabled: false
       multitenancyId:
         kind: AWSClusterRoleIdentity
@@ -48,9 +48,12 @@ charts:
             protocol: tcp
             fromPort: 5473
             toPort: 5473
-      bastion.enabled: false
+      bastion:
+        enabled: false
+      baseOS: ubuntu-20.04
     kubeadmControlPlane:
       replicas: $(tksCpNode)
+      controlPlaneMachineType: $(tksCpNodeType)
     machinePool:
     - name: taco
       machineType: $(tksInfraNodeType)
@@ -66,16 +69,17 @@ charts:
         taco-ingress-gateway: enabled
       roleAdditionalPolicies:
       - "arn:aws:iam::aws:policy/AmazonS3FullAccess"
+    machineDeployment:
     - name: normal
+      numberOfAZ: 3 # ap-northeast-2
+      minSizePerAZ: $(tksUserNode)
+      maxSizePerAZ: $(tksUserNodeMax)
+      selector:
+        matchLabels:
       machineType: $(tksUserNodeType)
-      replicas: $(tksUserNode)
-      minSize: 0
-      maxSize: $(tksUserNodeMax)
       rootVolume:
         size: 50
         type: gp2
-      roleAdditionalPolicies:
-      - "arn:aws:iam::aws:policy/service-role/AmazonEBSCSIDriverPolicy"
 
 - name: ingress-nginx
   override:
@@ -95,22 +99,19 @@ charts:
 
 - name: cluster-autoscaler
   override:
-    discoveryNamespace: $(clusterName)
-    discoveryClusterName: $(clusterName)
+    image:
+      repository: harbor.taco-cat.xyz/tks/cluster-autoscaler
+      tag: v1.26.4
+    autoDiscovery:
+      clusterName: $(clusterName)
+      labels:
+        - namespace: $(clusterName)
+    cloudProvider: clusterapi
+    clusterAPICloudConfigPath: /etc/kubernetes/kubeconfig
+    clusterAPIKubeconfigSecret: "mgmt-kubeconfig"
+    clusterAPIMode: incluster-kubeconfig
 
 - name: cluster-autoscaler-rbac
   override:
     deployMgmtRbacOnly:
       targetNamespace: $(clusterName)
-
-- name: argo-rollouts
-  override:
-    controller:
-      nodeSelector:
-        taco-lma: enabled
-      replicas: 2
-      image:
-        registry: harbor.taco-cat.xyz
-        repository: tks/argo-rollouts
-        tag: v1.4.1
-

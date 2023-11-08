@@ -348,6 +348,7 @@ charts:
         access_key: $(defaultUser)
         secret_key: $(defaultPassword)
         insecure: true
+        aws_sdk_auth: true
     sidecarsService.name: thanos-sidecars
     sidecarsService.endpoints:
       - 192.168.97.102 # should not be in the loopback range (127.0.0.0/8)

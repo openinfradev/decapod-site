@@ -83,21 +83,28 @@ charts:
         enable-underscores-in-headers: "true"
         proxy-body-size: "10m"
 
-- name: cluster-autoscaler
-  override:
-    discoveryNamespace: $(clusterName)
-    discoveryClusterName: $(clusterName)
-
 - name: cluster-autoscaler-rbac
   override:
     deployMgmtRbacOnly:
       targetNamespace: $(clusterName)
 
-- name: k8s-cluster-autoscaler
+- name: cluster-autoscaler
   override:
     image:
       repository: harbor.taco-cat.xyz/tks/cluster-autoscaler
-      tag: v1.25.2
-    awsRegion: ap-northeast-2
+      tag: v1.25.3
     autoDiscovery:
       clusterName: $(clusterName)
+    cloudProvider: aws
+    awsRegion: ap-northeast-2
+    rbac:
+     serviceAccount:
+       create: false
+       name: "cluster-autoscaler"
+    extraArgs:
+      expander: priority
+    expanderPriorities:
+      "10":
+        - .*-taco
+      "50":
+        - .*-normal
