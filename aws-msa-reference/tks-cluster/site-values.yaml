@@ -11,7 +11,7 @@ global:
   cloudAccountID: CHANGEME
 
   tksCpNode: 3
-  tksCpNodeType: m5a.2xlarge
+  tksCpNodeType: m6i.2xlarge
   tksInfraNode: CHNAGEME
   tksInfraNodeMax: CHANGEME
   tksInfraNodeType: CHANGEME
