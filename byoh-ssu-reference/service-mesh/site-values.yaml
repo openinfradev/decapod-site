@@ -69,7 +69,7 @@ charts:
         registry: $(imageRegistry)/tks
         tag: 1.34.1
       datacenters:
-        size: 1
+        size: 3
         perNodeConfigInitContainerImage: $(imageRegistry)/tks/yq:4
         initContainers:
           serverConfigInitImage: $(imageRegistry)/tks/cass-config-builder:1.0-ubi7
@@ -121,18 +121,35 @@ charts:
 - name: istio-ingressgateway
   override:
     revision: ""
-    replicaCount: 1
+    replicaCount: 2
     image: $(imageRegistry)/tks/proxyv2:1.17.2
     autoscaling:
       enabled: false
       minReplicas: 1
       maxReplicas: 5
       targetCPUUtilizationPercentage: 80
-    service.type: LoadBalancer
-    #resources.requests.cpu: 1000m
-    #resources.requests.memory: 1024Mi
-    #resources.limits.cpu: 2000m
-    #resources.limits.memory: 2048Mi
+    service:
+      type: NodePort
+      ports:
+      - name: status-port
+        port: 15021
+        protocol: TCP
+        targetPort: 15021
+        nodePort: 30013
+      - name: http2
+        port: 80
+        protocol: TCP
+        targetPort: 80
+        nodePort: 30014
+      - name: https
+        port: 443
+        protocol: TCP
+        targetPort: 443
+        nodePort: 30015
+    resources.requests.cpu: 1000m
+    resources.requests.memory: 1024Mi
+    resources.limits.cpu: 2000m
+    resources.limits.memory: 2048Mi
     nodeSelector: $(serviceMeshIngressNodeSelector)
 
 - name: istio-egressgateway

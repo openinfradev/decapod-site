@@ -1,0 +1,28 @@
+apiVersion: openinfradev.github.com/v1
+kind: HelmValuesTransformer
+metadata:
+  name: site
+
+charts:
+- name: db-secret-argo
+  override:
+    postgres:
+      secretName: argo-postgres-config
+      username: ${DATABASE_USER}
+      password: ${DATABASE_PASSWORD}
+
+- name: argo-workflows-operator
+  override:
+    controller:
+      persistence:
+        postgresql:
+          host: ${DATABASE_HOST}
+          port: ${DATABASE_PORT}
+          database: postgres
+          tableName: argo_workflows
+          userNameSecret:
+            name: argo-postgres-config
+            key: postgres-username
+          passwordSecret:
+            name: argo-postgres-config
+            key: postgres-password

@@ -3,6 +3,20 @@ kind: HelmValuesTransformer
 metadata:
   name: site
 
+# 대상환경의 정보를 넣는 부분 (btv경우)
+# - clusterName 이건 tks-api가 해줄꺼 같음
+# - s3Service 이것도 tks-api가 해줄꺼고 ep secret을 잘 넣어줘야함
+# - lmaNameSpace 이건 그냥 하던대로 놓는걸로..
+# - grafanaDatasourceMetric 이것도 ep secret
+# ......
+# - kafka 정보가 들어오면 이것도 추가해 수정필요, 예시 형태로 추가해둠, 'name: fluentbit' 검색된 블록에 주석부분 확인
+# - kafka로 보내기는 routing 없이 모두다 kafka에 싣습니다.
+# ============================================================================
+# 환경에 맞추어 다음과 같이 수정해둠
+# minio에 2000GB 할당, 이전에 es에 3개의 데이터 노드에 그렇게 돼있던걸로 생각해 설정했으나 그렇지 않다면 변경필요 -> 'name: minio' 검색된 블록에서 persistance 부분
+# 위 내역을 수정하면 적절하게 subcommand 부분도 수정해야함
+# 현제 설정은 매트릭 7일, 로그 2일 보관
+
 global:
   nodeSelector:
     taco-lma: enabled
@@ -54,8 +68,7 @@ charts:
 
 - name: prometheus
   override:
-    kubeEtcd.enabled: false
-    prometheus.prometheusSpec.secrets: []
+    kubeEtcd.enabled: true
     prometheus.prometheusSpec.storageSpec.volumeClaimTemplate.spec.storageClassName: $(storageClassName)
     prometheus.prometheusSpec.storageSpec.volumeClaimTemplate.spec.resources.requests.storage: 20Gi
     prometheus.prometheusSpec.retention: 2d
@@ -65,8 +78,9 @@ charts:
     prometheus.prometheusSpec.podMonitorNamespaceSelector.matchLabels.name: $(lmaNameSpace)
     prometheus.prometheusSpec.ruleNamespaceSelector.matchLabels.name: $(lmaNameSpace)
     prometheus.thanosServiceExternal.annotations: $(awsNlbAnnotation)
-    prometheus.thanosServiceExternal.type: LoadBalancer
-
+    prometheus.thanosServiceExternal:
+      type: NodePort
+      nodePort: 30004
     alertmanager.service.type: NodePort
     alertmanager.service.nodePort: 30111
     alertmanager.alertmanagerSpec.alertmanagerConfigSelector.matchLabels.alertmanagerConfig: example
@@ -111,7 +125,9 @@ charts:
     persistence.storageClassName: $(storageClassName)
     sidecar.dashboards.searchNamespace: ALL
     # grafana oidc
-    service.type: LoadBalancer
+    service:
+      type: NodePort
+      nodePort: 30001
     service.annotations: $(awsNlbAnnotation)
     grafana\.ini:
       server:
@@ -149,6 +165,11 @@ charts:
         - name: taco-loki
           host: $(lokiHost)
           port: $(lokiPort)
+        # kafka:
+        #   enabled: true
+        #   broker: btv-kafka-0.my-kafka-headless.lma.svc.cluster.local:9092,
+        #   topics: taco
+
       targetLogs:
       - tag: kube.*
         bufferChunkSize: 2M
@@ -237,14 +258,20 @@ charts:
         versioning: true
         objectlocking: false
     persistence.storageClass: $(storageClassName)
-    persistence.size: 500Gi
+    persistence.size: 2000Gi
     persistence.accessMode: ReadWriteOnce
-    service.type: LoadBalancer
+    service:
+      type: NodePort
+      nodePort: 30003
     service.annotations: $(awsNlbAnnotation)
     # deploy target node's label
     consoleIngress.nodeSelector: $(nodeSelector)
     postJob.nodeSelector: $(nodeSelector)
-
+    customCommands:
+    - command: ilm rule add --expire-days 7 myminio/tks-thanos
+    - command: ilm rule add --expire-days 2 myminio/tks-loki
+    - command: ilm ls myminio/tks-thanos
+    - command: ilm ls myminio/tks-loki
 
 - name: thanos
   override:
@@ -253,10 +280,12 @@ charts:
     # clusterDomain: $(clusterName)
     existingObjstoreSecret: $(thanosObjstoreSecret)
     query.nodeSelector: $(nodeSelector)
-    query.service.type: LoadBalancer
+    query.service.type: ClusterIP
     query.service.annotations: $(awsNlbAnnotation)
     queryFrontend.nodeSelector: $(nodeSelector)
-    queryFrontend.service.type: LoadBalancer
+    queryFrontend.service:
+      type: NodePort
+      nodePort: 30005
     queryFrontend.enabled: true
     queryFrontend.config: |-
         type: IN-MEMORY
@@ -349,7 +378,6 @@ charts:
         access_key: $(defaultUser)
         secret_key: $(defaultPassword)
         insecure: true
-        aws_sdk_auth: true
     sidecarsService.name: thanos-sidecars
     sidecarsService.endpoints:
       - 192.168.97.102 # should not be in the loopback range (127.0.0.0/8)
@@ -367,7 +395,9 @@ charts:
   override:
     global.dnsService: kube-dns
     # global.clusterDomain: $(clusterName) # annotate cluste because the cluster name is still cluster.local regardless cluster
-    gateway.service.type: LoadBalancer
+    gateway.service:
+      type: NodePort
+      nodePort: 30002
     gateway.service.annotations: $(awsNlbAnnotation)
     ingester.persistence.storageClass: $(storageClassName)
     distributor.persistence.storageClass: $(storageClassName)

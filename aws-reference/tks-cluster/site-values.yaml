@@ -8,21 +8,26 @@ global:
   clusterName: cluster.local
   sshKeyName: CHANGEME
   clusterRegion: CHANGEME
-  mdNumOfAz: CHANGEME
-  mdMinSizePerAz: CHANGEME
-  mdMaxSizePerAz: CHANGEME
-  mdMachineType: CHANGEME
-  cpReplicas: CHANGEME
-  mpReplicas: CHANGEME
-  mpMachineType: CHANGEME
-  awsAccountID: CHANGEME
   cloudAccountID: CHANGEME
+
+  tksCpNode: 3
+  tksCpNodeType: m6i.2xlarge
+  tksInfraNode: CHNAGEME
+  tksInfraNodeMax: CHANGEME
+  tksInfraNodeType: CHANGEME
+  tksUserNode: CHANGEME
+  tksUserNodeMax: CHANGEME
+  tksUserNodeType: CHANGEME
+  # 노드 스탑을 위해서는 min은 항상 0
+  # 승규님 의견 추가: machine pool 노드에 축소불가설정 필요
+
 charts:
 - name: cluster-api-aws
   override:
     sshKeyName: $(sshKeyName)
     cluster:
       name: $(clusterName)
+      kubernetesVersion: v1.26.10
       eksEnabled: false
       multitenancyId:
         kind: AWSClusterRoleIdentity
@@ -43,15 +48,18 @@ charts:
             protocol: tcp
             fromPort: 5473
             toPort: 5473
-      bastion.enabled: false
+      bastion:
+        enabled: false
+      baseOS: ubuntu-20.04
     kubeadmControlPlane:
-      replicas: $(cpReplicas)
+      replicas: $(tksCpNode)
+      controlPlaneMachineType: $(tksCpNodeType)
     machinePool:
     - name: taco
-      machineType: $(mpMachineType)
-      replicas: $(mpReplicas)
-      minSize: 3
-      maxSize: 3
+      machineType: $(tksInfraNodeType)
+      replicas: $(tksInfraNode)
+      minSize: 0
+      maxSize: $(tksInfraNodeMax)
       rootVolume:
         size: 200
         type: gp2
@@ -63,12 +71,12 @@ charts:
       - "arn:aws:iam::aws:policy/AmazonS3FullAccess"
     machineDeployment:
     - name: normal
-      numberOfAZ: $(mdNumOfAz)
-      minSizePerAZ: $(mdMinSizePerAz)
-      maxSizePerAZ: $(mdMaxSizePerAz)
+      numberOfAZ: 3 # ap-northeast-2
+      minSizePerAZ: $(tksUserNode)
+      maxSizePerAZ: $(tksUserNodeMax)
       selector:
         matchLabels:
-      machineType: $(mdMachineType)
+      machineType: $(tksUserNodeType)
       rootVolume:
         size: 50
         type: gp2
@@ -78,10 +86,6 @@ charts:
     controller:
       nodeSelector:
         taco-lma: enabled
-      resources:
-        requests:
-          cpu: 2000m
-          memory: 4Gi
       service:
         externalTrafficPolicy: Local
         annotations:
@@ -95,8 +99,17 @@ charts:
 
 - name: cluster-autoscaler
   override:
-    discoveryNamespace: $(clusterName)
-    discoveryClusterName: $(clusterName)
+    image:
+      repository: harbor.taco-cat.xyz/tks/cluster-autoscaler
+      tag: v1.26.4
+    autoDiscovery:
+      clusterName: $(clusterName)
+      labels:
+        - namespace: $(clusterName)
+    cloudProvider: clusterapi
+    clusterAPICloudConfigPath: /etc/kubernetes/kubeconfig
+    clusterAPIKubeconfigSecret: "mgmt-kubeconfig"
+    clusterAPIMode: incluster-kubeconfig
 
 - name: cluster-autoscaler-rbac
   override:

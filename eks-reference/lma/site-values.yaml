@@ -226,12 +226,12 @@ charts:
         secretKey: $(defaultPassword)
         policy: consoleAdmin
     buckets:
-      - name: thanos
+      - name: tks-thanos
         policy: public
         purge: false
         versioning: true
         objectlocking: false
-      - name: loki
+      - name: tks-loki
         policy: public
         purge: false
         versioning: true
@@ -349,6 +349,7 @@ charts:
         access_key: $(defaultUser)
         secret_key: $(defaultPassword)
         insecure: true
+        aws_sdk_auth: true
     sidecarsService.name: thanos-sidecars
     sidecarsService.endpoints:
       - 192.168.97.102 # should not be in the loopback range (127.0.0.0/8)
@@ -356,9 +357,9 @@ charts:
 - name: prepare-etcd-secret
   override:
     nodeSelector:
-      "node-role.kubernetes.io/master": ""
+      "node-role.kubernetes.io/control-plane": ""
     tolerations:
-      - key: "node-role.kubernetes.io/master"
+      - key: "node-role.kubernetes.io/control-plane"
         effect: "NoSchedule"
         operator: "Exists"
 
