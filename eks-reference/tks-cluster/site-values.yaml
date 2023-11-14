@@ -47,7 +47,7 @@ charts:
     - name: taco
       machineType: $(tksInfraNodeType)
       replicas: $(tksInfraNode)
-      minSize: 0
+      minSize: $(tksInfraNode)
       maxSize: $(tksInfraNodeMax)
       rootVolume:
         size: 200
@@ -62,7 +62,7 @@ charts:
     - name: normal
       machineType: $(tksUserNodeType)
       replicas: $(tksUserNode)
-      minSize: 0
+      minSize: $(tksUserNode)
       maxSize: $(tksUserNodeMax)
       rootVolume:
         size: 50
