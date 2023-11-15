@@ -11,6 +11,8 @@ global:
   tksCpNode: CHNAGEME
   tksInfraNode: CHNAGEME
   tksUserNode: CHANGEME
+  keycloakIssuerUri: CHANGEME
+  keycloakClientId: CHANGEME
 charts:
 - name: cluster-api-byoh
   override:
@@ -27,6 +29,11 @@ charts:
         matchLabels:
           role: $(clusterName)-control-plane
       replicas: $(tksCpNode)
+      clusterConfiguration:
+        apiServer:
+          extraArgs:
+            oidc-client-id: $(keycloakClientId)
+            oidc-issuer-url: $(keycloakIssuerUri)
     machineDeployment:
     - name: taco
       replicas: $(tksInfraNode)
