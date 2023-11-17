@@ -231,6 +231,7 @@ charts:
     deployment.resources.limits.memory: 1024Mi
     deployment.nodeSelector:
       tks-msa: enabled
+    deployment.serviceType: LoadBalancer
     auth.strategy: openid
     auth.openid.client_id: $(keycloakClientPrefix)-kiali
     auth.openid.issuer_uri: $(keycloakIssuerUri)
@@ -252,8 +253,12 @@ charts:
 
 - name: gatekeeper
   override:
+    nodeSelector:
+      tks-msa: enabled
     config:
       discovery-url: $(keycloakIssuerUri)
-      upstream-url: http://jaeger-operator-jaeger-query.tks-msa.svc
+      upstream-url: http://jaeger-operator-jaeger-query.tks-msa.svc:16686
       client-id: $(keycloakClientPrefix)-gatekeeper-jaeger
       client-secret: $(gatekeeperSecret)
+      secure-cookie: false
+
