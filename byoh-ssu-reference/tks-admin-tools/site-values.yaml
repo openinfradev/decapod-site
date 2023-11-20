@@ -13,7 +13,6 @@ global:
 charts:
   - name: keycloak
     override:
-      replicaCount: 3
       global.storageClass: $(storageClass)
       auth.adminPassword: $(commonPassword)
       ingress.enabled: true

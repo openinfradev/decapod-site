@@ -12,7 +12,6 @@ global:
 charts:
 - name: keycloak
   override:
-    replicaCount: 3
     global.storageClass: $(storageClass)
     auth.adminPassword: $(commonPassword)
     ingress.enabled: true
@@ -48,7 +47,7 @@ charts:
       ingress:
         hosts:
           core: TO_BE_FIXED
-        className: "nginx"
+        className: "nginx"  
     externalURL: TO_BE_FIXED
     persistence:
       persistentVolumeClaim:
@@ -75,21 +74,21 @@ charts:
     database:
       type: external
       external:
-        host: $(dbHost)
+        host: $(dbHost)  
         password: $(commonPassword)
         sslmode: "require"
     core:
-      replicas: 2
+      replicas: 2  
     jobservice:
-      replicas: 2
+      replicas: 2  
     registry:
-      replicas: 2
+      replicas: 2  
     chartmuseum:
-      replicas: 2
+      replicas: 2  
     trivy:
-      replicas: 2
+      replicas: 2  
     portal:
-      replicas: 2
+      replicas: 2  
     harborAdminPassword: $(commonPassword)
 
 - name: ingress-nginx
