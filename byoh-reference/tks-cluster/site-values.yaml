@@ -5,6 +5,8 @@ metadata:
 
 global:
   # These values are replaced on cluster creation by workflow
+  imageRepo: harbor-cicd.taco-cat.xyz
+  imageGroup: tks
   clusterName: cluster.local
   clusterEndpointHost: CHANGEME
   clusterEndpointPort: CHANGEME
@@ -66,13 +68,65 @@ charts:
       config:
         enable-underscores-in-headers: "true"
         proxy-body-size: "10m"
+      image:
+        registry: harbor.taco-cat.xyz
+        image: tks/controller
+        digest: ""
+      admissionWebhooks:
+        patch:
+          image:
+            registry: harbor.taco-cat.xyz
+            image: tks/kube-webhook-certgen
+            digest: ""
 
 - name: cluster-autoscaler
   override:
     discoveryNamespace: $(clusterName)
     discoveryClusterName: $(clusterName)
+    image:
+      repository: $(imageRepo)/$(imageGroup)/cluster-autoscaler
+      tag: v1.25.2
 
 - name: cluster-autoscaler-rbac
   override:
     deployMgmtRbacOnly:
       targetNamespace: $(clusterName)
+    image:
+      repository: $(imageRepo)/$(imageGroup)/cluster-autoscaler
+      tag: v1.25.2
+
+- name: tigera-operator
+  override:
+    tigeraOperator:
+      image: $(imageGroup)/calico-operator
+      registry: $(imageRepo)
+    calicoctl:
+      image: $(imageRepo)/$(imageGroup)/calico-ctl
+    installation:
+      registry: $(imageRepo)/
+      imagePath: $(imageGroup)
+      imagePrefix: calico-
+
+- name: local-path-provisioner
+  override:
+    image:
+      repository: $(imageRepo)/$(imageGroup)/local-path-provisioner
+
+- name: metrics-server
+  override:
+    image:
+      repository: $(imageRepo)/$(imageGroup)/metrics-server
+
+- name: argo-rollouts
+  override:
+    controller:
+      image:
+        registry: $(imageRepo)
+        repository: $(imageGroup)/argo-rollouts
+        tag: v1.4.1
+
+    dashboard:
+      image:
+        registry: $(imageRepo)
+        repository: $(imageGroup)/kubectl-argo-rollouts
+        tag: v1.4.1
