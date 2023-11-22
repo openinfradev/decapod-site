@@ -24,6 +24,8 @@ while true; do
             DECAPOD_BASE_URL=$2; shift 2;;
       (-s|--site)
             site_list=$2; shift 2;;
+      (-g|--image-repo)
+            image_repo=$2; shift 2;;
       (-r|--registry)
             DOCKER_IMAGE_REPO=$2
             GITHUB_IMAGE_REPO=$2; shift 2;;
@@ -54,7 +56,7 @@ do
     cp -r $site/$app/*.yaml decapod-base-yaml/$app/$site/
 
     echo "Rendering $app-manifest.yaml for $site site"
-    docker run --rm -i -v $(pwd)/decapod-base-yaml/$app:/$app --name kustomize-build ${DOCKER_IMAGE_REPO}/sktcloud/decapod-render:v2.0.0  kustomize build --enable-alpha-plugins /${app}/${site} -o /$app/$site/$app-manifest.yaml
+    docker run --rm -i -v $(pwd)/decapod-base-yaml/$app:/$app --name kustomize-build ${DOCKER_IMAGE_REPO}/decapod-render:v3.3.0  kustomize build --enable-alpha-plugins /${app}/${site} -o /$app/$site/$app-manifest.yaml
     build_result=$?
 
     if [ $build_result != 0 ]; then
@@ -68,8 +70,12 @@ do
       exit 1
     fi
 
-    docker run --rm -i --net=host -v $(pwd)/decapod-base-yaml:/decapod-base-yaml -v $(pwd)/$outputdir:/out --name generate ${DOCKER_IMAGE_REPO}/sktcloud/decapod-render:v2.0.0 helm2yaml/helm2yaml -m /$hr_file -t -o /out/$site/$app
-    rm $hr_file
+    if [ -z "$image_repo" ]; then
+      docker run --rm -i --net=host -v $(pwd)/decapod-base-yaml:/decapod-base-yaml -v $(pwd)/$outputdir:/out --name generate ${DOCKER_IMAGE_REPO}/decapod-render:v3.3.0 helm2yaml/helm2yaml -m /$hr_file -t -o /out/$site/$app 
+    else
+      docker run --rm -i --net=host -v $(pwd)/decapod-base-yaml:/decapod-base-yaml -v $(pwd)/$outputdir:/out --name generate ${DOCKER_IMAGE_REPO}/decapod-render:v3.3.0 helm2yaml/helm2yaml -m /$hr_file -t -o /out/$site/$app -g ${image_repo}
+    fi
+    rm -f $hr_file
 
   done
 

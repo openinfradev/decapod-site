@@ -86,8 +86,8 @@ do
       awk '{f="split_" NR; print $0 > f}' RS='---' decapod-base-yaml/lma/${site}/lma-manifest.yaml
       for i in `ls split_*`; do
         if [ $(cat $i|shyaml get-value metadata.name) = 'prometheus-operator' ]; then
-          [[ $(cat $i | shyaml get-value spec.values.prometheusOperator.thanosImage.repository) == ${VALIDATE_TARGET_REPO}* ]] || exit 1
-          [[ $(cat $i | shyaml get-value spec.values.prometheusOperator.prometheusConfigReloader.image.repository) == ${VALIDATE_TARGET_REPO}* ]] || exit 1
+          [[ $(cat $i | shyaml get-value spec.values.prometheusOperator.thanosImage.repository) == tks/thanos ]] || exit 1
+          [[ $(cat $i | shyaml get-value spec.values.prometheusOperator.prometheusConfigReloader.image.repository) == tks/prometheus-config-reloader ]] || exit 1
         fi
       done
       rm split_*
