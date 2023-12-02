@@ -102,8 +102,7 @@ charts:
         repeat_interval: 1h
 
 - name: prometheus-node-exporter
-  override:
-    hostNetwork: false
+
 
 - name: kube-state-metrics
   override:
@@ -117,7 +116,6 @@ charts:
 - name: prometheus-process-exporter
   override:
     conf.processes: dockerd,kubelet,kube-proxy,ntpd,node
-    pod.hostNetwork: false
 
 - name: grafana
   override:
