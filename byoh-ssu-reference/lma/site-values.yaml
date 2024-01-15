@@ -59,6 +59,7 @@ global:
 charts:
 - name: prometheus-operator
   override:
+    prometheusOperator.global.imageRegistry: harbor.skbroadband.com  #???
     prometheusOperator.nodeSelector: $(nodeSelector)
     prometheusOperator.admissionWebhooks.patch.image.sha: ""
     prometheusOperator.image.repository: tks/prometheus-operator
