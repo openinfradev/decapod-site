@@ -38,6 +38,13 @@ charts:
         virtual-server.f5.com/partition: TO_BE_FIXED
       externalDatabase.host: $(dbHost)
       externalDatabase.password: $(commonPassword)
+      extraEnvVars:
+      - name: QUARKUS_TRANSACTION_MANAGER_ENABLE_RECOVERY
+        value: "true"
+      - name: KC_HOSTNAME_ADMIN_URL
+        value: "https://tks-console-stg.skbroadband.com/auth"
+      - name: KC_HOSTNAME_URL
+        value: "https://tks-console-stg.skbroadband.com/auth"
 
   - name: tks-apis
     override:
