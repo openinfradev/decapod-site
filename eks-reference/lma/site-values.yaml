@@ -338,6 +338,26 @@ charts:
             for: 30m
             labels:
               severity: critical
+          - alert: policy-audited
+            annotations:
+              Checkpoint: 정책위반이 발생하였습니다.({{  $labels.kind }} / {{ $labels.name }})
+              description: 클러스터 ( {{ $labels.taco_cluster }})의 자원({{ $labels.violating_kind }} - {{ $labels.violating_namespace }} / {{  $labels.violating_nam }})에서 정책({{  $labels.kind }} / {{ $labels.name }})위반이 발생했습니다. 메시지 - {{ $labels.violation_msg }}
+              discriminative: $labels.kind,$labels.name,$labels.taco_cluster,$labels.violating_kind,$labels.violating_name,$labels.violating_namespace,$labels.violation_msg
+              message: 정책 위반({{ $labels.kind }} / {{ $labels.name }})
+            expr: opa_scorecard_constraint_violations{namespace!='kube-system|taco-system|gatekeeper-system', violation_enforcement='warn'} == 1
+            for: 1m
+            labels:
+              severity: critical
+          - alert: policy-blocked
+            annotations:
+              Checkpoint: "정책위반이 시도가 발생하였습니다.({{  $labels.kind }} / {{ $labels.name }})"
+              description: "클러스터 ( {{ $labels.taco_cluster }})의 자원({{ $labels.violating_kind }} - {{ $labels.violating_namespace }} / {{  $labels.violating_nam }})에서 정책({{  $labels.kind }} / {{ $labels.name }})위반 시도가 발생했습니다. 메시지 - {{ $labels.violation_msg }}"
+              discriminative: $labels.kind,$labels.name,$labels.taco_cluster,$labels.violating_kind,$labels.violating_name,$labels.violating_namespace,$labels.violation_msg
+              message: 정책 위반({{ $labels.kind }} / {{ $labels.name }}) 시도
+            expr: opa_scorecard_constraint_violations{namespace!='kube-system|taco-system|gatekeeper-system',violation_enforcement=''} == 1
+            for: 1m
+            labels:
+              severity: critical
 
 - name: thanos-config
   override:
