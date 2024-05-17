@@ -171,7 +171,7 @@ charts:
       - tag: kube.*
         bufferChunkSize: 2M
         bufferMaxSize: 5M
-        do_not_store_as_default: false
+        do_not_store_as_default: true
         index: container
         loki_name: taco-loki
         memBufLimit: 20MB
