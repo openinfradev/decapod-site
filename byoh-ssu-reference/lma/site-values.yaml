@@ -180,7 +180,7 @@ charts:
         - index: platform
           loki_name: taco-loki
           key: $kubernetes['namespace_name']
-          value: kube-system|$(lmaNameSpace)|taco-system|argo
+          value: kube-system|$(lmaNameSpace)|taco-system|gatekeeper-system|argo
         parser: docker
         path: /var/log/containers/*.log
         type: kubernates
