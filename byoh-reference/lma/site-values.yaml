@@ -288,8 +288,6 @@ charts:
     # - --deduplication.replica-label="replica"
     storegateway.persistence.size: 8Gi
     ruler.nodeSelector: $(nodeSelector)
-    ruler.service.type: LoadBalancer
-    ruler.service.annotations: $(awsNlbAnnotation)
     ruler.alertmanagers:
     - http://alertmanager-operated:9093
     ruler.persistence.size: 8Gi
