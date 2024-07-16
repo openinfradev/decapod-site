@@ -288,17 +288,19 @@ charts:
     # - --deduplication.replica-label="replica"
     storegateway.persistence.size: 8Gi
     ruler.nodeSelector: $(nodeSelector)
-    ruler.service.type: LoadBalancer
-    ruler.service.annotations: $(awsNlbAnnotation)
     ruler.alertmanagers:
     - http://alertmanager-operated:9093
     ruler.persistence.size: 8Gi
+    ruler.service:
+      type: NodePort
+      nodePort: 30007
     ruler.config:
       groups:
         - name: "tks"
           rules:
           - alert: "PrometheusDown"
             expr: absent(up{prometheus="lma/lma-prometheus"})
+
               
 - name: thanos-config
   override:
