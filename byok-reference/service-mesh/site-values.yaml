@@ -1,0 +1,284 @@
+apiVersion: openinfradev.github.com/v1
+kind: HelmValuesTransformer
+metadata:
+  name: site
+
+global:
+  clusterName: cluster.local
+  namespace: tks-msa
+  imageRegistry: harbor.taco-cat.xyz
+  serviceMeshControlNodeSelector:
+    tks-msa: enabled
+  serviceMeshIngressNodeSelector:
+    tks-ingressgateway: enabled
+  serviceMeshEgressNodeSelector:
+    tks-egressgateway: enabled
+  ingressGatewayLabel: istio-ingressgateway
+  egressGatewayLabel: istio-egressgateway
+  keycloakIssuerUri: https://keycloak.com/auth/realms/oraganization
+  keycloakClientPrefix: client-prefix
+  gatekeeperSecret: gatekeeper-secret
+
+charts:
+- name: cert-manager
+  override:
+    image:
+      repository: $(imageRegistry)/tks/cert-manager-controller
+    nodeSelector:
+        tks-msa: enabled
+    webhook:
+      image:
+        repository: $(imageRegistry)/tks/cert-manager-webhook
+      nodeSelector:
+        tks-msa: enabled
+    cainjector:
+      image:
+        repository: $(imageRegistry)/tks/cert-manager-cainjector
+      nodeSelector:
+        tks-msa: enabled
+
+- name: k8ssandra-operator
+  override:
+    image:
+      registry: $(imageRegistry)
+      repository: tks/k8ssandra-operator
+      tag: v1.6.0
+    nodeSelector:
+      tks-msa: enabled
+    cleaner:
+      image:
+        registry: $(imageRegistry)
+        repository: tks/k8ssandra-tools
+        tag: latest
+    client:
+      image:
+        registry: $(imageRegistry)
+        repository: tks/k8ssandra-tools
+        tag: latest
+    cass-operator:
+      image:
+        registry: $(imageRegistry)
+        repository: tks/cass-operator
+        tag: v1.14.0
+      nodeSelector:
+        tks-msa: enabled
+
+- name: servicemesh-k8ssandra-resource
+  override:
+    namespace: $(namespace)
+    cassandra:
+      jmxInitContainerImage:
+        name: busybox
+        registry: $(imageRegistry)/tks
+        tag: 1.34.1
+      datacenters:
+        size: 1
+        perNodeConfigInitContainerImage: $(imageRegistry)/tks/yq:4
+        initContainers:
+          serverConfigInitImage: $(imageRegistry)/tks/cass-config-builder:1.0-ubi7
+        jmxInitContainerImage:
+          name: busybox
+          registry: $(imageRegistry)/tks
+          tag: 1.34.1
+        containers:
+        - name: cassandra
+          image: $(imageRegistry)/tks/cass-management-api:4.0.6
+        - name: server-system-logger
+          image: $(imageRegistry)/tks/system-logger:v1.14.0
+        config:
+          heapSize: 2048M
+        storageConfig:
+          storageClassName: taco-storage
+          accessModes: ReadWriteOnce
+          size: 300Gi
+        racks:
+          affinity:
+            nodeAffinity:
+              requiredDuringSchedulingIgnoredDuringExecution:
+                nodeSelectorTerms:
+                - matchExpressions:
+                  - key: tks-msa
+                    operator: In
+                    values:
+                    - enabled
+        stargate:
+          size: 1
+          heapSize: 384M
+          containerImage:
+            registry: $(imageRegistry)
+            repository: tks
+            tag: v1.0.67
+          nodeSelector:
+            tks-msa: enabled
+
+- name: istiod
+  override:
+    revision: ""
+    pilot.autoscaleEnabled: false
+    pilot.traceSampling: 0.1
+    pilot.nodeSelector: $(serviceMeshControlNodeSelector)
+    global.hub: $(imageRegistry)/tks
+    global.proxy.clusterDomain: $(clusterName)
+    global.tracer.zipkin.address: jaeger-operator-jaeger-collector.$(namespace):9411
+
+- name: istio-ingressgateway
+  override:
+    revision: ""
+    replicaCount: 1
+    image: $(imageRegistry)/tks/proxyv2:1.17.2
+    autoscaling:
+      enabled: false
+      minReplicas: 1
+      maxReplicas: 5
+      targetCPUUtilizationPercentage: 80
+    service:
+      type: NodePort
+      ports:
+      - name: status-port
+        port: 15021
+        protocol: TCP
+        targetPort: 15021
+        nodePort: 30013
+      - name: http2
+        port: 80
+        protocol: TCP
+        targetPort: 80
+        nodePort: 30014
+      - name: https
+        port: 443
+        protocol: TCP
+        targetPort: 443
+        nodePort: 30015
+    #resources.requests.cpu: 1000m
+    #resources.requests.memory: 1024Mi
+    #resources.limits.cpu: 2000m
+    #resources.limits.memory: 2048Mi
+    nodeSelector: $(serviceMeshIngressNodeSelector)
+
+- name: istio-egressgateway
+  override:
+    revision: ""
+    replicaCount: 1
+    image: $(imageRegistry)/tks/proxyv2:1.17.2
+    autoscaling.enabled: false
+    service.type: ClusterIP
+    #resources.requests.cpu: 1000m
+    #resources.requests.memory: 1024Mi
+    #resources.limits.cpu: 2000m
+    #resources.limits.memory: 2048Mi
+    nodeSelector: $(serviceMeshEgressNodeSelector)
+
+- name: jaeger-operator
+  override:
+    image:
+      repository: $(imageRegistry)/tks/jaeger-operator
+      tag: 1.35.0
+    nodeSelector: $(serviceMeshControlNodeSelector)
+
+- name: servicemesh-jaeger-resource
+  override:
+    namespace: tks-msa
+    sampling.param: 10
+    collector.resources.requests.cpu: 500m
+    collector.resources.requests.memory: 1024Mi
+    collector.resources.limits.cpu: 1000m
+    collector.resources.limits.memory: 2048Mi
+    collector:
+      image: $(imageRegistry)/tks/jaeger-collector:1.35.0
+      affinity:
+        nodeAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            nodeSelectorTerms:
+            - matchExpressions:
+              - key: tks-msa
+                operator: In
+                values:
+                - enabled
+    storage:
+      type: cassandra
+      cassandra:
+        options:
+          servers: cassandra-dc-service.tks-msa.svc
+          keyspace: jaeger_v1_datacenter
+        cassandraCreateSchema:
+          image: $(imageRegistry)/tks/jaeger-cassandra-schema:1.35.0
+        dependencies:
+          enabled: true
+          image: $(imageRegistry)/tks/spark-dependencies:1.35.0
+    query:
+      image: $(imageRegistry)/tks/jaeger-query:1.35.0
+      basePath: /
+      affinity:
+        nodeAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            nodeSelectorTerms:
+            - matchExpressions:
+              - key: tks-msa
+                operator: In
+                values:
+                - enabled
+    agent:
+      image: $(imageRegistry)/tks/jaeger-agent:1.35.0
+    cassandra:
+      user:
+        enabled: true
+        username: tks
+        password: tksword
+      nodeSelector:
+        tks-msa: enabled
+    elasticsearch.user.enabled: false
+
+- name: kiali-operator
+  override:
+    image:
+      repo: $(imageRegistry)/tks/kiali-operator
+      tag: v1.63.0
+    nodeSelector: $(serviceMeshControlNodeSelector)
+
+- name: servicemesh-kiali-resource
+  override:
+    namespace: tks-msa
+    istioNamespace: tks-msa
+    deployment.namespace: tks-msa
+    deployment.image_name: $(imageRegistry)/tks/kiali
+    deployment.image_version: v1.63.0
+    deployment.resources.requests.cpu: 500m
+    deployment.resources.requests.memory: 512Mi
+    deployment.resources.limits.cpu: 1000m
+    deployment.resources.limits.memory: 1024Mi
+    deployment.nodeSelector:
+      tks-msa: enabled
+    deployment.serviceType: NodePort
+    auth.strategy: openid
+    auth.openid.client_id: $(keycloakClientPrefix)-kiali
+    auth.openid.issuer_uri: $(keycloakIssuerUri)
+    auth.openid.username_claim: preferred_username
+    auth.openid.scopes: [ "openid", "email" ]
+    auth.openid.disable_rbac: true
+    externalServices.istio.configMapName: istio
+    externalServices.istio.istioIdentityDomain: svc.$(clusterName)
+    externalServices.prometheus.url: http://lma-prometheus.lma.svc:9090
+    externalServices.tracing.inClusterUrl: http://jaeger-operator-jaeger-query.tks-msa:16686
+    externalServices.tracing.url: https://jaeger-v2.taco-cat.xyz
+    externalServices.tracing.useGrpc: false
+    externalServices.grafana.auth.type: basic
+    externalServices.grafana.auth.username: admin
+    externalServices.grafana.auth.password: password
+    externalServices.grafana.inClusterUrl: http://grafana.lma.svc:80
+    externalServices.grafana.url: https://grafana-v2.taco-cat.xyz
+    server.webRoot: /
+
+- name: gatekeeper
+  override:
+    nodeSelector:
+      tks-msa: enabled
+    config:
+      discovery-url: $(keycloakIssuerUri)
+      upstream-url: http://jaeger-operator-jaeger-query.tks-msa.svc:16686
+      client-id: $(keycloakClientPrefix)-gatekeeper-jaeger
+      client-secret: $(gatekeeperSecret)
+      secure-cookie: false
+    service:
+      type: NodePort
+      proxy:
+        nodePort: 30012
