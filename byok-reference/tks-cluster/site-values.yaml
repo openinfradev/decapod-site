@@ -1,0 +1,78 @@
+apiVersion: openinfradev.github.com/v1
+kind: HelmValuesTransformer
+metadata:
+  name: site
+
+global:
+  # These values are replaced on cluster creation by workflow
+  clusterName: cluster.local
+  clusterEndpointHost: CHANGEME
+  clusterEndpointPort: CHANGEME
+  tksCpNode: CHNAGEME
+  tksInfraNode: CHNAGEME
+  tksUserNode: CHANGEME
+  keycloakIssuerUri: CHANGEME
+  keycloakClientId: CHANGEME
+charts:
+- name: cluster-api-byoh
+  override:
+    cluster:
+      name: $(clusterName)
+      kubernetesVersion: v1.25.11
+    byoCluster:
+      bundleLookupBaseRegistry: harbor.taco-cat.xyz/cluster_api_provider_bringyourownhost
+      controlPlaneEndpoint:
+        host: $(clusterEndpointHost)
+        port: $(clusterEndpointPort)
+    kubeadmControlPlane:
+      selector:
+        matchLabels:
+          role: $(clusterName)-control-plane
+      replicas: $(tksCpNode)
+      clusterConfiguration:
+        apiServer:
+          extraArgs:
+            oidc-client-id: $(keycloakClientId)
+            oidc-issuer-url: $(keycloakIssuerUri)
+    machineDeployment:
+    - name: taco
+      replicas: $(tksInfraNode)
+      selector:
+        matchLabels:
+          role: $(clusterName)-tks
+      labels:
+        servicemesh: enabled
+        taco-egress-gateway: enabled
+        taco-ingress-gateway: enabled
+        taco-lma: enabled
+    - name: normal
+      replicas: $(tksUserNode)
+      selector:
+        matchLabels:
+          role: $(clusterName)-worker
+
+- name: ingress-nginx
+  override:
+    controller:
+      nodeSelector:
+        taco-lma: enabled
+      resources:
+        requests:
+          cpu: 2000m
+          memory: 4Gi
+      service:
+        externalTrafficPolicy: Local
+        type: NodePort
+      config:
+        enable-underscores-in-headers: "true"
+        proxy-body-size: "10m"
+
+- name: cluster-autoscaler
+  override:
+    discoveryNamespace: $(clusterName)
+    discoveryClusterName: $(clusterName)
+
+- name: cluster-autoscaler-rbac
+  override:
+    deployMgmtRbacOnly:
+      targetNamespace: $(clusterName)

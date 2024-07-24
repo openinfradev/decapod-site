@@ -1,0 +1,26 @@
+apiVersion: openinfradev.github.com/v1
+kind: HelmValuesTransformer
+metadata:
+  name: site
+
+global:
+  nodeSelector:
+    taco-lma: enabled
+  clusterName: cluster.local
+  storageClassName: taco-storage
+  repository: https://openinfradev.github.io/helm-repo/
+
+charts:
+- name: opa-gatekeeper
+  override: 
+    postUpgrade.nodeSelector: $(nodeSelector)
+    postInstall.nodeSelector: $(nodeSelector)
+    preUninstall.nodeSelector: $(nodeSelector)
+    controllerManager.nodeSelector: $(nodeSelector)
+    audit.nodeSelector: $(nodeSelector)
+    crds.nodeSelector: $(nodeSelector)
+    
+    enableDeleteOperations: true
+
+- name: policy-resources
+  override: {}
