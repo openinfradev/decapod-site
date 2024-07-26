@@ -1,7 +1,8 @@
 #!/bin/bash
 DECAPOD_BASE_URL=https://github.com/openinfradev/decapod-base-yaml.git
-BRANCH="main"
-DOCKER_IMAGE_REPO="docker.io"
+BRANCH="develop"
+# DOCKER_IMAGE_REPO="docker.io"
+DOCKER_IMAGE_REPO="harbor.taco-cat.xyz/tks"
 GITHUB_IMAGE_REPO="ghcr.io"
 outputdir="output"
 
@@ -48,29 +49,15 @@ do
 
   for app in `ls $site/`
   do
-    # helm-release file name rendered on 1st phase
-    hr_file="decapod-base-yaml/$app/$site/$app-manifest.yaml"
-    mkdir decapod-base-yaml/$app/$site
-    cp -r $site/$app/*.yaml decapod-base-yaml/$app/$site/
-
-    echo "Rendering $app-manifest.yaml for $site site"
-    docker run --rm -i -v $(pwd)/decapod-base-yaml/$app:/$app --name kustomize-build ${DOCKER_IMAGE_REPO}/sktcloud/decapod-render:v2.0.0  kustomize build --enable-alpha-plugins /${app}/${site} -o /$app/$site/$app-manifest.yaml
-    build_result=$?
-
-    if [ $build_result != 0 ]; then
-      exit $build_result
-    fi
-
-    if [ -f "$hr_file" ]; then
-      echo "[render-cd] [$site, $app] Successfully Generate Helm-Release Files!"
-    else
-      echo "[render-cd] [$site, $app] Failed to render $app-manifest.yaml"
-      exit 1
-    fi
-
-    docker run --rm -i --net=host -v $(pwd)/decapod-base-yaml:/decapod-base-yaml -v $(pwd)/$outputdir:/out --name generate ${DOCKER_IMAGE_REPO}/sktcloud/decapod-render:v2.0.0 helm2yaml/helm2yaml -m /$hr_file -t -o /out/$site/$app
-    rm $hr_file
-
+    echo docker run --rm -i --net=host -v $(pwd):/decapod -v $(pwd)/$outputdir:/output --name generate ${DOCKER_IMAGE_REPO}/decapod-render:v3.0.0 -b /decapod/decapod-base-yaml/$app/base/resources.yaml -o /decapod/$site/$app/site-values.yaml --output /output/$site/$app
+    docker run --rm -i --net=host -v $(pwd):/decapod -v $(pwd)/$outputdir:/output --name generate ${DOCKER_IMAGE_REPO}/decapod-render:v3.0.0 -b /decapod/decapod-base-yaml/$app/ -o /decapod/$site/$app/site-values.yaml --output /output/$site/$app
+    sudo mkdir $outputdir/$site/$app/CRD
+    
+    echo "Move every CustomResourceDefinition to $outputdir/$site/$app/CRD"
+    for i in `find $outputdir/$site/$app | grep CustomResourceDefinition | grep -v '/CRD/'` 
+    do 
+      sudo mv $i $outputdir/$site/$app/CRD
+    done
   done
 
   # Post processes for the customized action
