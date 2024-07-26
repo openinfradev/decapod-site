@@ -26,3 +26,5 @@ charts:
           passwordSecret:
             name: argo-postgres-config
             key: postgres-password
+- name: db-secret-decapod-db
+- name: postgresql

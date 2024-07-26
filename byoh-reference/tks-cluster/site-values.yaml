@@ -69,6 +69,17 @@ charts:
 
 - name: cluster-autoscaler
   override:
+    image:
+      repository: harbor.taco-cat.xyz/tks/cluster-autoscaler
+      tag: v1.26.4
+    autoDiscovery:
+      clusterName: $(clusterName)
+      labels:
+        - namespace: $(clusterName)
+    cloudProvider: clusterapi
+    clusterAPICloudConfigPath: /etc/kubernetes/kubeconfig
+    clusterAPIKubeconfigSecret: "mgmt-kubeconfig"
+    clusterAPIMode: incluster-kubeconfig
     discoveryNamespace: $(clusterName)
     discoveryClusterName: $(clusterName)
 
@@ -76,3 +87,17 @@ charts:
   override:
     deployMgmtRbacOnly:
       targetNamespace: $(clusterName)
+
+- name: local-path-provisioner
+- name: kubed
+- name: metrics-server
+- name: argo-rollouts
+  override:
+    controller:
+      nodeSelector:
+        taco-lma: enabled
+      replicas: 2
+      image:
+        registry: harbor.taco-cat.xyz
+        repository: tks/argo-rollouts
+        tag: v1.4.1

@@ -386,3 +386,5 @@ charts:
     - name: $(clusterName)-tks-loki
     - name: $(clusterName)-tks-loki-user
     tks.iamRoles: $(tksIamRoles)
+
+- name: opa-exporter

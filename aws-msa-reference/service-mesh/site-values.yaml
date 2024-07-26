@@ -111,11 +111,18 @@ charts:
           nodeSelector:
             tks-msa: enabled
 
+- name: istio-base
+  override:
+    global:
+      istioNamespace: $(namespace)
+
 - name: istiod
   override:
     revision: ""
     pilot.autoscaleEnabled: false
     pilot.traceSampling: 0.1
+    pilot.resources.requests.cpu: 500m
+    pilot.resources.requests.memory: 2048Mi
     pilot.nodeSelector: $(serviceMeshControlNodeSelector)
     global.hub: $(imageRegistry)/tks
     global.proxy.clusterDomain: $(clusterName)
@@ -132,10 +139,11 @@ charts:
       maxReplicas: 5
       targetCPUUtilizationPercentage: 80
     service.type: LoadBalancer
-    #resources.requests.cpu: 1000m
-    #resources.requests.memory: 1024Mi
-    #resources.limits.cpu: 2000m
-    #resources.limits.memory: 2048Mi
+    resources.requests.cpu: 1000m
+    resources.requests.memory: 1024Mi
+    resources.limits.cpu: 2000m
+    resources.limits.memory: 2048Mi
+    labels.app: $(ingressGatewayLabel)
     nodeSelector: $(serviceMeshIngressNodeSelector)
 
 - name: istio-egressgateway
@@ -145,10 +153,11 @@ charts:
     image: $(imageRegistry)/tks/proxyv2:1.17.2
     autoscaling.enabled: false
     service.type: ClusterIP
-    #resources.requests.cpu: 1000m
-    #resources.requests.memory: 1024Mi
-    #resources.limits.cpu: 2000m
-    #resources.limits.memory: 2048Mi
+    resources.requests.cpu: 1000m
+    resources.requests.memory: 1024Mi
+    resources.limits.cpu: 2000m
+    resources.limits.memory: 2048Mi
+    labels.app: $(egressGatewayLabel)
     nodeSelector: $(serviceMeshEgressNodeSelector)
 
 - name: jaeger-operator
@@ -185,6 +194,9 @@ charts:
           keyspace: jaeger_v1_datacenter
         cassandraCreateSchema:
           image: $(imageRegistry)/tks/jaeger-cassandra-schema:1.35.0
+          datacenter: "dc"
+          mode: "prod"
+          timeout: "3m"
         dependencies:
           enabled: true
           image: $(imageRegistry)/tks/spark-dependencies:1.35.0
@@ -250,6 +262,23 @@ charts:
     externalServices.grafana.inClusterUrl: http://grafana.lma.svc:80
     externalServices.grafana.url: https://grafana-v2.taco-cat.xyz
     server.webRoot: /
+
+- name: servicemesh-grafana-dashboard
+  override:
+    namespace: tks-msa
+    dashboards.label: grafana_dashboard
+
+- name: servicemesh-prometheusmonitor
+  override:
+    namespace: tks-msa
+    istio.interval: "15s"
+    jaeger.interval: "15s"
+
+- name: servicemesh-prometheusrule
+  override:
+    namespace: tks-msa
+    aggregation.interval: "15s"
+    optimization.interval: "15s"
 
 - name: gatekeeper
   override:

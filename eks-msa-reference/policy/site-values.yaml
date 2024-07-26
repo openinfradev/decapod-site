@@ -24,3 +24,5 @@ charts:
 
 - name: policy-resources
   override: {}
+
+- name: ratify

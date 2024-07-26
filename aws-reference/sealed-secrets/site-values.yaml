@@ -3,4 +3,7 @@ kind: HelmValuesTransformer
 metadata:
   name: site
 
-charts: []
+charts:
+- name: sealed-secrets-operator-crds
+- name: sealed-secrets-operator
+- name: kubed
