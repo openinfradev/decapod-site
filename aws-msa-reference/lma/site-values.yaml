@@ -384,4 +384,5 @@ charts:
     s3.buckets:
     - name: $(clusterName)-tks-thanos
     - name: $(clusterName)-tks-loki
+    - name: $(clusterName)-tks-loki-user
     tks.iamRoles: $(tksIamRoles)
