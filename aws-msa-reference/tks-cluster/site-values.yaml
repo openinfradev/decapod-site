@@ -27,7 +27,7 @@ charts:
     sshKeyName: $(sshKeyName)
     cluster:
       name: $(clusterName)
-      kubernetesVersion: v1.26.10
+      kubernetesVersion: v1.29.8
       eksEnabled: false
       multitenancyId:
         kind: AWSClusterRoleIdentity
@@ -54,6 +54,8 @@ charts:
     kubeadmControlPlane:
       replicas: $(tksCpNode)
       controlPlaneMachineType: $(tksCpNodeType)
+      ami:
+        id: ami-02e4e8f09921cfe97
     machinePool:
     - name: taco
       machineType: $(tksInfraNodeType)
@@ -69,6 +71,8 @@ charts:
         taco-ingress-gateway: enabled
       roleAdditionalPolicies:
       - "arn:aws:iam::aws:policy/AmazonS3FullAccess"
+      ami:
+        id: ami-02e4e8f09921cfe97
     machineDeployment:
     - name: normal
       numberOfAZ: 3 # ap-northeast-2
@@ -80,6 +84,8 @@ charts:
       rootVolume:
         size: 50
         type: gp2
+      ami:
+        id: ami-02e4e8f09921cfe97
 
 - name: ingress-nginx
   override:

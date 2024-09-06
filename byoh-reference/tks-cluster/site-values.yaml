@@ -18,7 +18,7 @@ charts:
   override:
     cluster:
       name: $(clusterName)
-      kubernetesVersion: v1.25.11
+      kubernetesVersion: v1.29.8
     byoCluster:
       bundleLookupBaseRegistry: harbor.taco-cat.xyz/cluster_api_provider_bringyourownhost
       controlPlaneEndpoint:
