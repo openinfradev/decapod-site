@@ -16,6 +16,8 @@ global:
 
   lokiHost: loki-loki-distributed-gateway
   lokiPort: 80
+  lokiuserHost: loki-user-loki-distributed-gateway
+  lokiuserPort: 80
   s3Service: "minio.lma.svc:9000" # depends on $lmaNameSpace (ex. minio.taco-system.svc)
 
   lmaNameSpace: lma
@@ -148,13 +150,17 @@ charts:
         - name: taco-loki
           host: $(lokiHost)
           port: $(lokiPort)
+        lokiuser:
+        - name: taco-loki-user
+          host: $(lokiuserHost)
+          port: $(lokiuserPort)
       targetLogs:
       - tag: kube.*
         bufferChunkSize: 2M
         bufferMaxSize: 5M
-        do_not_store_as_default: true
+        do_not_store_as_default: false
         index: container
-        loki_name: taco-loki
+        loki_name: taco-loki-user
         memBufLimit: 20MB
         multi_index:
         - index: platform
@@ -275,7 +281,7 @@ charts:
     storegateway.persistence.size: 8Gi
     ruler.nodeSelector: $(nodeSelector)
     ruler.service.type: LoadBalancer
-    ruler.service.annotations: $(awsNlbAnnotation)  
+    ruler.service.annotations: $(awsNlbAnnotation)
     ruler.alertmanagers:
     - http://alertmanager-operated:9093
     ruler.persistence.size: 8Gi
@@ -285,7 +291,7 @@ charts:
           rules:
           - alert: "PrometheusDown"
             expr: absent(up{prometheus="lma/lma-prometheus"})
-
+              
 - name: thanos-config
   override:
     objectStorage:
@@ -341,10 +347,42 @@ charts:
         aws:
           s3: http://$(defaultUser):$(defaultPassword)@$(s3Service)/minio
 
+- name: loki-user
+  override:
+    global.dnsService: kube-dns
+    # global.clusterDomain: $(clusterName) # annotate cluste because the cluster name is still cluster.local regardless cluster
+    gateway.service.type: LoadBalancer
+    gateway.service.annotations: $(awsNlbAnnotation)
+    ingester.persistence.storageClass: $(storageClassName)
+    distributor.persistence.storageClass: $(storageClassName)
+    queryFrontend.persistence.storageClass: $(storageClassName)
+    ruler.persistence.storageClass: $(storageClassName)
+    indexGateway.persistence.storageClass: $(storageClassName)
+    # select target node's label
+    ingester.nodeSelector: $(nodeSelector)
+    distributor.nodeSelector: $(nodeSelector)
+    querier.nodeSelector: $(nodeSelector)
+    queryFrontend.nodeSelector: $(nodeSelector)
+    queryScheduler.nodeSelector: $(nodeSelector)
+    tableManager.nodeSelector: $(nodeSelector)
+    gateway.nodeSelector: $(nodeSelector)
+    compactor.nodeSelector: $(nodeSelector)
+    ruler.nodeSelector: $(nodeSelector)
+    indexGateway.nodeSelector: $(nodeSelector)
+    memcachedChunks.nodeSelector: $(nodeSelector)
+    memcachedFrontend.nodeSelector: $(nodeSelector)
+    memcachedIndexQueries.nodeSelector: $(nodeSelector)
+    memcachedIndexWrites.nodeSelector: $(nodeSelector)
+    loki:
+      storageConfig:
+        aws:
+          s3: http://$(defaultUser):$(defaultPassword)@$(s3Service)/minio
+
 - name: lma-bucket
   override:
     s3.enabled: true
     s3.buckets:
     - name: $(clusterName)-tks-thanos
     - name: $(clusterName)-tks-loki
+    - name: $(clusterName)-tks-loki-user
     tks.iamRoles: $(tksIamRoles)

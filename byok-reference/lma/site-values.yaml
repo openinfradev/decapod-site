@@ -32,10 +32,10 @@ global:
   - prometheus-operated:10901
 
   # servicemesh dashboard and grafana
-  realms: 04a70f29
+  realms: or2ru44fn
   consoleUrl: tks-console.taco-cat.xyz
   grafanaDomain: taco-cat.xyz
-  keycloakDomain: keycloak-eom.taco-cat.xyz
+  keycloakDomain: tks-console-dev.taco-cat.xyz
   grafanaClientSecret: JLtsanYtrCg21RGxrcVmQP0GeuDFUhpA
 
   awsNlbAnnotation:
@@ -56,8 +56,7 @@ charts:
 
 - name: prometheus
   override:
-    kubeEtcd.enabled: false
-    prometheus.prometheusSpec.secrets: []
+    kubeEtcd.enabled: true
     prometheus.prometheusSpec.storageSpec.volumeClaimTemplate.spec.storageClassName: $(storageClassName)
     prometheus.prometheusSpec.storageSpec.volumeClaimTemplate.spec.resources.requests.storage: 20Gi
     prometheus.prometheusSpec.retention: 2d
@@ -67,8 +66,9 @@ charts:
     prometheus.prometheusSpec.podMonitorNamespaceSelector.matchLabels.name: $(lmaNameSpace)
     prometheus.prometheusSpec.ruleNamespaceSelector.matchLabels.name: $(lmaNameSpace)
     prometheus.thanosServiceExternal.annotations: $(awsNlbAnnotation)
-    prometheus.thanosServiceExternal.type: LoadBalancer
-
+    prometheus.thanosServiceExternal:
+      type: NodePort
+      nodePort: 30004
     alertmanager.service.type: NodePort
     alertmanager.service.nodePort: 30111
     alertmanager.alertmanagerSpec.alertmanagerConfigSelector.matchLabels.alertmanagerConfig: example
@@ -113,7 +113,9 @@ charts:
     persistence.storageClassName: $(storageClassName)
     sidecar.dashboards.searchNamespace: ALL
     # grafana oidc
-    service.type: LoadBalancer
+    service:
+      type: NodePort
+      nodePort: 30001
     service.annotations: $(awsNlbAnnotation)
     grafana\.ini:
       server:
@@ -245,7 +247,9 @@ charts:
     persistence.storageClass: $(storageClassName)
     persistence.size: 500Gi
     persistence.accessMode: ReadWriteOnce
-    service.type: LoadBalancer
+    service:
+      type: NodePort
+      nodePort: 30003
     service.annotations: $(awsNlbAnnotation)
     # deploy target node's label
     consoleIngress.nodeSelector: $(nodeSelector)
@@ -259,10 +263,13 @@ charts:
     # clusterDomain: $(clusterName)
     existingObjstoreSecret: $(thanosObjstoreSecret)
     query.nodeSelector: $(nodeSelector)
-    query.service.type: LoadBalancer
+    query.service.type: ClusterIP
     query.service.annotations: $(awsNlbAnnotation)
     queryFrontend.nodeSelector: $(nodeSelector)
-    queryFrontend.service.type: LoadBalancer
+    queryFrontend.service:
+      nodePorts:
+        http: 30005
+      type: NodePort
     queryFrontend.enabled: true
     queryFrontend.config: |-
         type: IN-MEMORY
@@ -281,8 +288,6 @@ charts:
     # - --deduplication.replica-label="replica"
     storegateway.persistence.size: 8Gi
     ruler.nodeSelector: $(nodeSelector)
-    ruler.service.type: LoadBalancer
-    ruler.service.annotations: $(awsNlbAnnotation)
     ruler.alertmanagers:
     - http://alertmanager-operated:9093
     ruler.persistence.size: 8Gi
@@ -292,7 +297,10 @@ charts:
           rules:
           - alert: "PrometheusDown"
             expr: absent(up{prometheus="lma/lma-prometheus"})
-              
+    ruler.service:
+      type: NodePort
+      nodePort: 30007
+
 - name: thanos-config
   override:
     objectStorage:
@@ -303,7 +311,6 @@ charts:
         access_key: $(defaultUser)
         secret_key: $(defaultPassword)
         insecure: true
-        aws_sdk_auth: true
     sidecarsService.name: thanos-sidecars
     sidecarsService.endpoints:
       - 192.168.97.102 # should not be in the loopback range (127.0.0.0/8)
@@ -321,7 +328,9 @@ charts:
   override:
     global.dnsService: kube-dns
     # global.clusterDomain: $(clusterName) # annotate cluste because the cluster name is still cluster.local regardless cluster
-    gateway.service.type: LoadBalancer
+    gateway.service:
+      type: NodePort
+      nodePort: 30002
     gateway.service.annotations: $(awsNlbAnnotation)
     ingester.persistence.storageClass: $(storageClassName)
     distributor.persistence.storageClass: $(storageClassName)
@@ -351,8 +360,9 @@ charts:
 - name: loki-user
   override:
     global.dnsService: kube-dns
-    # global.clusterDomain: $(clusterName) # annotate cluste because the cluster name is still cluster.local regardless cluster
-    gateway.service.type: LoadBalancer
+    gateway.service:
+      type: NodePort
+      nodePort: 30006
     gateway.service.annotations: $(awsNlbAnnotation)
     ingester.persistence.storageClass: $(storageClassName)
     distributor.persistence.storageClass: $(storageClassName)
@@ -385,5 +395,4 @@ charts:
     s3.buckets:
     - name: $(clusterName)-tks-thanos
     - name: $(clusterName)-tks-loki
-    - name: $(clusterName)-tks-loki-user
     tks.iamRoles: $(tksIamRoles)
