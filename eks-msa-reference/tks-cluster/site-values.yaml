@@ -27,14 +27,14 @@ charts:
       name: $(clusterName)
       region: $(clusterRegion)
       eksEnabled: true
-      kubernetesVersion: v1.25.9
+      kubernetesVersion: v1.29.8
       eksAddons:
       - name: "aws-ebs-csi-driver"
-        version: "v1.18.0-eksbuild.1"
+        version: "v1.34.0-eksbuild.1"
         conflictResolution: "overwrite"
       - name: "vpc-cni"
         conflictResolution: "overwrite"
-        version: "v1.12.6-eksbuild.2"
+        version: "v1.18.3-eksbuild.2"
       multitenancyId:
         kind: AWSClusterRoleIdentity
         name: $(cloudAccountID)-account-role

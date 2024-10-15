@@ -171,7 +171,7 @@ charts:
       - tag: kube.*
         bufferChunkSize: 2M
         bufferMaxSize: 5M
-        do_not_store_as_default: false
+        do_not_store_as_default: true
         index: container
         loki_name: taco-loki
         memBufLimit: 20MB
@@ -179,7 +179,7 @@ charts:
         - index: platform
           loki_name: taco-loki
           key: $kubernetes['namespace_name']
-          value: kube-system|$(lmaNameSpace)|taco-system|argo
+          value: kube-system|$(lmaNameSpace)|taco-system|gatekeeper-system|argo
         parser: docker
         path: /var/log/containers/*.log
         type: kubernates
