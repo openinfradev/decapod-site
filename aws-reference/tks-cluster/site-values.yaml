@@ -116,8 +116,29 @@ charts:
     clusterAPICloudConfigPath: /etc/kubernetes/kubeconfig
     clusterAPIKubeconfigSecret: "mgmt-kubeconfig"
     clusterAPIMode: incluster-kubeconfig
+    discoveryNamespace: $(clusterName)
+    discoveryClusterName: $(clusterName)
 
 - name: cluster-autoscaler-rbac
   override:
     deployMgmtRbacOnly:
       targetNamespace: $(clusterName)
+
+- name: local-path-provisioner
+- name: kubed
+- name: metrics-server
+- name: argo-rollouts
+  override:
+    controller:
+      nodeSelector:
+        taco-lma: enabled
+      replicas: 2
+      image:
+        registry: harbor.taco-cat.xyz
+        repository: tks/argo-rollouts
+        tag: v1.4.1
+
+- name: aws-cloud-controller-manager
+- name: aws-ebs-csi-driver
+- name: aws-ack-s3-crds
+- name: aws-ack-s3
