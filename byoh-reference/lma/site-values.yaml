@@ -287,6 +287,11 @@ charts:
     # - --compact.enable-vertical-compaction
     # - --deduplication.replica-label="replica"
     storegateway.persistence.size: 8Gi
+    storegateway.config: |-
+        type: IN-MEMORY
+        config:
+          max_size: 0
+          max_item_size: 0
     ruler.nodeSelector: $(nodeSelector)
     ruler.alertmanagers:
     - http://alertmanager-operated:9093
