@@ -4,6 +4,5 @@ metadata:
   name: site
 
 charts:
-- name: sealed-secrets-operator-crds
 - name: sealed-secrets-operator
 - name: kubed
