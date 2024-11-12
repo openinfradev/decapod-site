@@ -287,6 +287,11 @@ charts:
     # - --compact.enable-vertical-compaction
     # - --deduplication.replica-label="replica"
     storegateway.persistence.size: 8Gi
+    storegateway.config: |-
+        type: IN-MEMORY
+        config:
+          max_size: 0
+          max_item_size: 0
     ruler.nodeSelector: $(nodeSelector)
     ruler.alertmanagers:
     - http://alertmanager-operated:9093
@@ -357,6 +362,9 @@ charts:
       storageConfig:
         aws:
           s3: http://$(defaultUser):$(defaultPassword)@$(s3Service)/minio
+      structuredConfig:
+        table_manager:
+          retention_period: 7d
 
 - name: loki-user
   override:
@@ -389,6 +397,9 @@ charts:
       storageConfig:
         aws:
           s3: http://$(defaultUser):$(defaultPassword)@$(s3Service)/minio
+      structuredConfig:
+        table_manager:
+          retention_period: 2d
 
 - name: lma-bucket
   override:
