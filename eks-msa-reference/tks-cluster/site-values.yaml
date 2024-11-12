@@ -127,5 +127,4 @@ charts:
 
 - name: aws-cloud-controller-manager
 - name: aws-ebs-csi-driver
-- name: aws-ack-s3-crds
-- name: aws-ack-s3
+- name: s3-chart
