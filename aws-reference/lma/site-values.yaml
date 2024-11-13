@@ -20,7 +20,7 @@ global:
   lokiuserPort: 80
   s3Service: "minio.lma.svc:9000" # depends on $lmaNameSpace (ex. minio.taco-system.svc)
 
-  lmaNameSpace: lma
+  lmaNameSpace: taco-system
 
   TksWebhookUrl: "FixItByWF"
   SlackUrl: "FixItByWF"
