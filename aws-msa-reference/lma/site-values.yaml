@@ -7,6 +7,7 @@ global:
   nodeSelector:
     taco-lma: enabled
   clusterName: cluster.local
+  clusterDomain: cluster.local
   storageClassName: taco-storage
   repository: https://openinfradev.github.io/helm-repo/
   serviceScrapeInterval: 30s
@@ -18,7 +19,7 @@ global:
   lokiPort: 80
   lokiuserHost: loki-user-loki-distributed-gateway
   lokiuserPort: 80
-  s3Service: "minio.lma.svc:9000" # depends on $lmaNameSpace (ex. minio.taco-system.svc)
+  s3Service: "minio.taco-system.svc:9000" # depends on $lmaNameSpace (ex. minio.taco-system.svc)
 
   lmaNameSpace: taco-system
 
@@ -222,7 +223,7 @@ charts:
         port: $(lokiPort)
         target_file: "/tmp/kubernetes-event.log"
     conf.default.hosts:
-    - "https://eck-elasticsearch-es-http.lma.svc.$(clusterName):9200"
+    - "https://eck-elasticsearch-es-http.$(lmaNameSpace).svc.$(clusterDomain):9200"
 
 - name: minio
   override:
@@ -255,7 +256,7 @@ charts:
   override:
     global.storageClass: $(storageClassName)
     # temporarily add annotation because a cluster is using not cluster-name but 'cluster.local'
-    # clusterDomain: $(clusterName)
+    # clusterDomain: $(clusterDomain)
     existingObjstoreSecret: $(thanosObjstoreSecret)
     query.nodeSelector: $(nodeSelector)
     query.service.type: LoadBalancer
@@ -324,7 +325,7 @@ charts:
 - name: loki
   override:
     global.dnsService: kube-dns
-    # global.clusterDomain: $(clusterName) # annotate cluste because the cluster name is still cluster.local regardless cluster
+    # global.clusterDomain: $(clusterDomain) # annotate cluste because the cluster name is still cluster.local regardless cluster
     gateway.service.type: LoadBalancer
     gateway.service.annotations: $(awsNlbAnnotation)
     ingester.persistence.storageClass: $(storageClassName)
@@ -358,7 +359,7 @@ charts:
 - name: loki-user
   override:
     global.dnsService: kube-dns
-    # global.clusterDomain: $(clusterName) # annotate cluste because the cluster name is still cluster.local regardless cluster
+    # global.clusterDomain: $(clusterDomain) # annotate cluste because the cluster name is still cluster.local regardless cluster
     gateway.service.type: LoadBalancer
     gateway.service.annotations: $(awsNlbAnnotation)
     ingester.persistence.storageClass: $(storageClassName)
