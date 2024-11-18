@@ -18,6 +18,7 @@ global:
   keycloakIssuerUri: https://keycloak.com/auth/realms/oraganization
   keycloakClientPrefix: client-prefix
   gatekeeperSecret: gatekeeper-secret
+  lmaNameSpace: taco-system
 
 charts:
 - name: cert-manager
@@ -252,14 +253,14 @@ charts:
     auth.openid.disable_rbac: true
     externalServices.istio.configMapName: istio
     externalServices.istio.istioIdentityDomain: svc.$(clusterName)
-    externalServices.prometheus.url: http://lma-prometheus.lma.svc:9090
+    externalServices.prometheus.url: http://lma-prometheus.$(lmaNameSpace).svc:9090
     externalServices.tracing.inClusterUrl: http://jaeger-operator-jaeger-query.tks-msa:16686
     externalServices.tracing.url: https://jaeger-v2.taco-cat.xyz
     externalServices.tracing.useGrpc: false
     externalServices.grafana.auth.type: basic
     externalServices.grafana.auth.username: admin
     externalServices.grafana.auth.password: password
-    externalServices.grafana.inClusterUrl: http://grafana.lma.svc:80
+    externalServices.grafana.inClusterUrl: http://grafana.$(lmaNameSpace).svc:80
     externalServices.grafana.url: https://grafana-v2.taco-cat.xyz
     server.webRoot: /
 

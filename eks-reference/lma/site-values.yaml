@@ -201,7 +201,6 @@ charts:
     prometheusRules.istio.aggregation.enabled: false
     prometheusRules.istio.optimization.enabled: false
     grafanaDatasource.prometheus.url: $(grafanaDatasourceMetric)
-    # grafanaDatasource.prometheus.url: "thanos-query.lma:9090"
     grafanaDatasource.loki.url: $(lokiHost):$(lokiPort)
 
 - name: prometheus-adapter
