@@ -303,8 +303,6 @@ charts:
       rawConfig:
         bucket: tks-thanos
         endpoint: $(s3Service)
-        access_key: $(defaultUser)
-        secret_key: $(defaultPassword)
         insecure: true
         aws_sdk_auth: true
     sidecarsService.name: thanos-sidecars
